@@ -261,9 +261,9 @@
       </div>
       <div class="kpis">
         <div class="kpi total reveal" style="animation-delay:.55s"><div class="v" id="kAvg">0 €</div><div class="l" id="kAvgL">coût annuel moyen du projet HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.6s"><div class="v" id="kTotal">0 €</div><div class="l" id="kTotalL">investissement total HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHw">0 €</div><div class="l">dont matériel HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.7s"><div class="v" id="kSp">0 €</div><div class="l">dont Speakli HT (mise en place + abonnement)</div></div>
+        <div class="kpi reveal" style="animation-delay:.6s"><div class="v" id="kSp">0 €</div><div class="l">dont Speakli, par an en moyenne (mise en place + abonnement)</div></div>
+        <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHw">0 €</div><div class="l">dont matériel, par an en moyenne</div></div>
+        <div class="kpi reveal" style="animation-delay:.7s"><div class="v" id="kTotal">0 €</div><div class="l" id="kTotalL">investissement total HT</div></div>
       </div>
 
       <div class="card reveal" style="animation-delay:.8s">
@@ -564,8 +564,8 @@ function render() {
   tween($('kAvg'), sum('total') / i.horizon, fmtE);
   $('kAvgL').textContent = `coût annuel moyen du projet HT (total ÷ ${i.horizon} ans)`;
   $('kTotalL').textContent = `investissement total HT sur ${i.horizon} ans`;
-  tween($('kHw'), sum('hw'), fmtE);
-  tween($('kSp'), sum('sp'), fmtE);
+  tween($('kHw'), sum('hw') / i.horizon, fmtE);
+  tween($('kSp'), sum('sp') / i.horizon, fmtE);
 
   drawChart('chartHw', HW_SERIES, rows);
   drawChart('chartSp', SP_SERIES, rows);
