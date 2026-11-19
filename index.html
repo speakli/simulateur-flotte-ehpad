@@ -8,13 +8,20 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --text: #16181d; --muted: #5d6370;
-    --border: #e2e5ea; --accent: #2457d6; --accent-soft: #e8eefc; --row: #fafbfc;
+    --bg: #f2f4f6; --card: #ffffff; --text: #1b2a3d; --muted: #6b7280;
+    --border: rgba(27, 42, 61, 0.1); --accent: #007aff; --accent-soft: #e8f0ff;
+    --emeis: #f07d00; --emeis-soft: #fff1e3;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+  .topband { height: 6px; background: linear-gradient(90deg, var(--accent) 0 50%, var(--emeis) 50% 100%); }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .brand img { width: 56px; height: 56px; }
+  .brand .x { color: var(--muted); font-size: 18px; }
+  .brand .client { font-weight: 700; font-size: 22px; color: var(--emeis); letter-spacing: .01em; }
+  .card h2 { border-left: 3px solid var(--emeis); padding-left: 8px; }
   h1 { font-size: 26px; margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 28px; }
   .grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
@@ -40,13 +47,17 @@
   th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
   th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
   th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
-  tr.full td { background: var(--accent-soft); font-weight: 600; }
+  tr.full td { background: var(--emeis-soft); font-weight: 600; }
+  .kpi { border-top: 3px solid var(--emeis); }
+  .kpi .v { color: var(--accent); }
   tfoot td { font-weight: 700; border-top: 2px solid var(--text); border-bottom: 0; }
   .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
 </style>
 </head>
 <body>
+<div class="topband"></div>
 <main>
+  <div class="brand"><img src="speakli-logo.png" alt="Speakli"><span class="x">×</span><span class="client">emeis</span></div>
   <h1>Simulateur flotte téléphones</h1>
   <p class="sub">Renseignez vos hypothèses : la simulation se met à jour en direct et s'exporte en fichier Excel.</p>
 
@@ -135,8 +146,8 @@ $('export').addEventListener('click', async () => {
   const i = inputs(), { fleet, rows } = simulate(i);
   const wb = new ExcelJS.Workbook();
   const H = "'Hypothèses'!";
-  const blue = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8EEFC' } };
-  const head = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2457D6' } };
+  const blue = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FF' } };
+  const head = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF007AFF' } };
   const white = { bold: true, color: { argb: 'FFFFFFFF' } };
   const eur = '#,##0 "€"';
 
@@ -198,7 +209,7 @@ $('export').addEventListener('click', async () => {
     .forEach(([L, c, k]) => { tr.getCell(c).value = { formula: `SUM(${L}${first}:${L}${last})`, result: sum(k) }; tr.getCell(c).numFmt = c >= 6 ? eur : '#,##0'; });
   tr.font = { bold: true };
   tr.eachCell(c => c.border = { top: { style: 'medium' } });
-  s.addConditionalFormatting({ ref: `A${first}:J${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFE8EEFC' } }, font: { bold: true } } }] });
+  s.addConditionalFormatting({ ref: `A${first}:J${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFF1E3' } }, font: { bold: true } } }] });
   s.views = [{ state: 'frozen', ySplit: 3 }];
   s.getCell(`A${last + 3}`).value = "Année 1 : achat de toute la flotte. Années suivantes : remplacement du % de maintenance (arrondi à l'unité supérieure). Renouvellement complet à chaque fin de cycle.";
   s.getCell(`A${last + 3}`).font = { italic: true, color: { argb: 'FF5D6370' } };
@@ -206,7 +217,7 @@ $('export').addEventListener('click', async () => {
   const buf = await wb.xlsx.writeBuffer();
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-  a.download = `simulation-flotte-telephones-${i.horizon}ans.xlsx`;
+  a.download = `speakli-emeis-simulation-flotte-telephones-${i.horizon}ans.xlsx`;
   a.click(); URL.revokeObjectURL(a.href);
 });
 </script>
