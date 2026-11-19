@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur flotte téléphones</title>
+<meta name="description" content="Simulation pluriannuelle d'achat et de renouvellement d'une flotte de téléphones pour un groupe d'établissements.">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #16181d; --muted: #5d6370;
+    --border: #e2e5ea; --accent: #2457d6; --accent-soft: #e8eefc; --row: #fafbfc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card h2 { font-size: 15px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  label { display: block; font-size: 14px; font-weight: 500; margin: 12px 0 4px; }
+  label small { display: block; font-weight: 400; color: var(--muted); }
+  input { width: 100%; padding: 9px 11px; font-size: 15px; border: 1px solid var(--border);
+    border-radius: 8px; background: #fff; color: var(--text); }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  .sep { border: 0; border-top: 1px solid var(--border); margin: 18px 0 6px; }
+  button { width: 100%; margin-top: 20px; padding: 12px; font-size: 15px; font-weight: 600;
+    color: #fff; background: var(--accent); border: 0; border-radius: 8px; cursor: pointer; }
+  button:hover { filter: brightness(1.08); }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 520px) { .kpis { grid-template-columns: 1fr; } }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 24px; font-weight: 700; }
+  .kpi .l { font-size: 13px; color: var(--muted); }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  tr.full td { background: var(--accent-soft); font-weight: 600; }
+  tfoot td { font-weight: 700; border-top: 2px solid var(--text); border-bottom: 0; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Simulateur flotte téléphones</h1>
+  <p class="sub">Renseignez vos hypothèses : la simulation se met à jour en direct et s'exporte en fichier Excel.</p>
+
+  <div class="grid">
+    <form class="card" id="f" onsubmit="return false">
+      <h2>Hypothèses</h2>
+      <label>Nombre d'établissements<input type="number" id="etab" min="1" step="1" value="10"></label>
+      <label>Téléphones par établissement<small>moyenne</small><input type="number" id="tel" min="0" step="0.1" value="20"></label>
+      <label>Bornes de charge par établissement<small>moyenne</small><input type="number" id="bornes" min="0" step="0.1" value="2"></label>
+      <label>Chargeurs individuels par établissement<small>moyenne</small><input type="number" id="chargeurs" min="0" step="0.1" value="0"></label>
+      <label>Renouvellement annuel (maintenance)<small>% de la flotte remplacé chaque année</small><input type="number" id="pct" min="0" max="100" step="1" value="10"></label>
+      <label>Renouvellement complet tous les<small>nombre d'années</small><input type="number" id="cycle" min="1" step="1" value="5"></label>
+      <label>Durée de la simulation<small>nombre d'années</small><input type="number" id="horizon" min="1" max="30" step="1" value="10"></label>
+
+      <hr class="sep">
+      <h2 style="margin-top:14px">Prix unitaires (€ HT, optionnel)</h2>
+      <label>Téléphone<input type="number" id="pTel" min="0" step="0.01" value="0"></label>
+      <label>Borne de charge<input type="number" id="pBorne" min="0" step="0.01" value="0"></label>
+      <label>Chargeur individuel<input type="number" id="pChargeur" min="0" step="0.01" value="0"></label>
+
+      <button type="button" id="export">Télécharger le fichier Excel</button>
+    </form>
+
+    <section>
+      <div class="kpis">
+        <div class="kpi"><div class="v" id="kFlotte">–</div><div class="l">téléphones dans la flotte</div></div>
+        <div class="kpi"><div class="v" id="kTel">–</div><div class="l">téléphones achetés sur la période</div></div>
+        <div class="kpi"><div class="v" id="kCout">–</div><div class="l">coût total sur la période (HT)</div></div>
+      </div>
+      <div class="card">
+        <h2>Simulation année par année</h2>
+        <div class="tablewrap"><table id="t"></table></div>
+        <p class="note">Année 1 : achat de toute la flotte. Les années suivantes, on remplace le % de maintenance (arrondi à l'unité supérieure). Toute la flotte est renouvelée à chaque fin de cycle. Les mêmes règles s'appliquent aux téléphones, aux bornes et aux chargeurs.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const num = id => Math.max(0, parseFloat($(id).value) || 0);
+const fmtN = n => n.toLocaleString('fr-FR');
+const fmtE = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+function inputs() {
+  return {
+    etab: Math.round(num('etab')), tel: num('tel'), bornes: num('bornes'), chargeurs: num('chargeurs'),
+    pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
+    horizon: Math.min(30, Math.max(1, Math.round(num('horizon')))),
+    pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
+  };
+}
+
+function simulate(i) {
+  const fleet = { tel: Math.round(i.etab * i.tel), bornes: Math.round(i.etab * i.bornes), chargeurs: Math.round(i.etab * i.chargeurs) };
+  const rows = []; let cumul = 0;
+  for (let y = 1; y <= i.horizon; y++) {
+    const full = (y - 1) % i.cycle === 0;
+    const q = k => full ? fleet[k] : Math.ceil(fleet[k] * i.pct - 1e-9);
+    const r = { y, type: full ? (y === 1 ? 'Achat initial' : 'Renouvellement complet') : 'Maintenance', full,
+      tel: q('tel'), bornes: q('bornes'), chargeurs: q('chargeurs') };
+    r.cTel = r.tel * i.pTel; r.cBornes = r.bornes * i.pBorne; r.cChargeurs = r.chargeurs * i.pChargeur;
+    r.total = r.cTel + r.cBornes + r.cChargeurs; cumul += r.total; r.cumul = cumul;
+    rows.push(r);
+  }
+  return { fleet, rows };
+}
+
+function render() {
+  const i = inputs(), { fleet, rows } = simulate(i);
+  const sum = k => rows.reduce((a, r) => a + r[k], 0);
+  $('kFlotte').textContent = fmtN(fleet.tel);
+  $('kTel').textContent = fmtN(sum('tel'));
+  $('kCout').textContent = fmtE(sum('total'));
+  $('t').innerHTML =
+    '<thead><tr><th>Année</th><th>Type</th><th>Téléphones</th><th>Bornes</th><th>Chargeurs</th><th>Coût total</th><th>Cumul</th></tr></thead><tbody>' +
+    rows.map(r => `<tr class="${r.full ? 'full' : ''}"><td>${r.y}</td><td>${r.type}</td><td>${fmtN(r.tel)}</td><td>${fmtN(r.bornes)}</td><td>${fmtN(r.chargeurs)}</td><td>${fmtE(r.total)}</td><td>${fmtE(r.cumul)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td></td><td>${fmtN(sum('tel'))}</td><td>${fmtN(sum('bornes'))}</td><td>${fmtN(sum('chargeurs'))}</td><td>${fmtE(sum('total'))}</td><td></td></tr></tfoot>`;
+}
+
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', render));
+render();
+
+// ---------- Export Excel (formules vivantes : elle peut modifier les hypothèses dans le fichier) ----------
+$('export').addEventListener('click', async () => {
+  const i = inputs(), { fleet, rows } = simulate(i);
+  const wb = new ExcelJS.Workbook();
+  const H = "'Hypothèses'!";
+  const blue = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8EEFC' } };
+  const head = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2457D6' } };
+  const white = { bold: true, color: { argb: 'FFFFFFFF' } };
+  const eur = '#,##0 "€"';
+
+  // Feuille Hypothèses
+  const h = wb.addWorksheet('Hypothèses');
+  h.columns = [{ width: 46 }, { width: 16 }, { width: 50 }];
+  h.getCell('A1').value = 'Hypothèses de la simulation'; h.getCell('A1').font = { bold: true, size: 14 };
+  h.getCell('C1').value = 'Les cellules bleues sont modifiables : tout le fichier se recalcule.';
+  h.getCell('C1').font = { italic: true, color: { argb: 'FF5D6370' } };
+  const inp = [
+    [3, "Nombre d'établissements", i.etab, '0'],
+    [4, 'Téléphones par établissement (moyenne)', i.tel, '0.0'],
+    [5, 'Bornes de charge par établissement (moyenne)', i.bornes, '0.0'],
+    [6, 'Chargeurs individuels par établissement (moyenne)', i.chargeurs, '0.0'],
+    [7, 'Renouvellement annuel (maintenance)', i.pct, '0%'],
+    [8, 'Renouvellement complet tous les (années)', i.cycle, '0'],
+    [10, 'Prix unitaire téléphone (€ HT)', i.pTel, eur],
+    [11, 'Prix unitaire borne de charge (€ HT)', i.pBorne, eur],
+    [12, 'Prix unitaire chargeur individuel (€ HT)', i.pChargeur, eur],
+  ];
+  inp.forEach(([r, l, v, f]) => {
+    h.getCell(`A${r}`).value = l; const c = h.getCell(`B${r}`);
+    c.value = v; c.numFmt = f; c.fill = blue; c.font = { bold: true };
+  });
+  h.getCell('A14').value = 'Flotte totale'; h.getCell('A14').font = { bold: true };
+  [[15, 'Téléphones', 'ROUND(B3*B4,0)', fleet.tel], [16, 'Bornes de charge', 'ROUND(B3*B5,0)', fleet.bornes],
+   [17, 'Chargeurs individuels', 'ROUND(B3*B6,0)', fleet.chargeurs]].forEach(([r, l, f, v]) => {
+    h.getCell(`A${r}`).value = l; h.getCell(`B${r}`).value = { formula: f, result: v }; h.getCell(`B${r}`).numFmt = '#,##0';
+  });
+
+  // Feuille Simulation
+  const s = wb.addWorksheet('Simulation');
+  s.columns = [10, 26, 13, 13, 13, 18, 18, 18, 18, 18].map(width => ({ width }));
+  s.getCell('A1').value = 'Simulation année par année'; s.getCell('A1').font = { bold: true, size: 14 };
+  const hdr = ['Année', 'Type', 'Téléphones', 'Bornes', 'Chargeurs', 'Coût téléphones', 'Coût bornes', 'Coût chargeurs', 'Coût total', 'Cumul'];
+  const hr = s.getRow(3); hdr.forEach((t, k) => { const c = hr.getCell(k + 1); c.value = t; c.fill = head; c.font = white; c.alignment = { horizontal: 'center' }; });
+  const first = 4;
+  rows.forEach((r, k) => {
+    const n = first + k, isFull = `MOD(A${n}-1,${H}$B$8)=0`;
+    const qty = col => ({ formula: `IF(${isFull},${H}$B$${col},ROUNDUP(${H}$B$${col}*${H}$B$7,0))` });
+    const row = s.getRow(n);
+    row.getCell(1).value = r.y;
+    row.getCell(2).value = { formula: `IF(${isFull},IF(A${n}=1,"Achat initial","Renouvellement complet"),"Maintenance")`, result: r.type };
+    row.getCell(3).value = { ...qty(15), result: r.tel };
+    row.getCell(4).value = { ...qty(16), result: r.bornes };
+    row.getCell(5).value = { ...qty(17), result: r.chargeurs };
+    row.getCell(6).value = { formula: `C${n}*${H}$B$10`, result: r.cTel };
+    row.getCell(7).value = { formula: `D${n}*${H}$B$11`, result: r.cBornes };
+    row.getCell(8).value = { formula: `E${n}*${H}$B$12`, result: r.cChargeurs };
+    row.getCell(9).value = { formula: `SUM(F${n}:H${n})`, result: r.total };
+    row.getCell(10).value = { formula: k === 0 ? `I${n}` : `J${n - 1}+I${n}`, result: r.cumul };
+    for (let c = 3; c <= 5; c++) row.getCell(c).numFmt = '#,##0';
+    for (let c = 6; c <= 10; c++) row.getCell(c).numFmt = eur;
+  });
+  const last = first + rows.length - 1, tr = s.getRow(last + 1);
+  tr.getCell(1).value = 'Total';
+  const sum = k => rows.reduce((a, r) => a + r[k], 0);
+  [['C', 3, 'tel'], ['D', 4, 'bornes'], ['E', 5, 'chargeurs'], ['F', 6, 'cTel'], ['G', 7, 'cBornes'], ['H', 8, 'cChargeurs'], ['I', 9, 'total']]
+    .forEach(([L, c, k]) => { tr.getCell(c).value = { formula: `SUM(${L}${first}:${L}${last})`, result: sum(k) }; tr.getCell(c).numFmt = c >= 6 ? eur : '#,##0'; });
+  tr.font = { bold: true };
+  tr.eachCell(c => c.border = { top: { style: 'medium' } });
+  s.addConditionalFormatting({ ref: `A${first}:J${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFE8EEFC' } }, font: { bold: true } } }] });
+  s.views = [{ state: 'frozen', ySplit: 3 }];
+  s.getCell(`A${last + 3}`).value = "Année 1 : achat de toute la flotte. Années suivantes : remplacement du % de maintenance (arrondi à l'unité supérieure). Renouvellement complet à chaque fin de cycle.";
+  s.getCell(`A${last + 3}`).font = { italic: true, color: { argb: 'FF5D6370' } };
+
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = `simulation-flotte-telephones-${i.horizon}ans.xlsx`;
+  a.click(); URL.revokeObjectURL(a.href);
+});
+</script>
+</body>
+</html>
