@@ -200,7 +200,7 @@
           </button>
         </div>
       </div>
-      <div class="field" data-id="cible" data-label="Établissements à équiper" data-sub="par défaut, tout le parc" data-value="229" data-max="229" data-min="1" data-step="1"></div>
+      <div class="field" data-id="cible" data-label="Établissements à équiper" data-sub="par défaut, tout le parc" data-value="229" data-min="1" data-step="1"></div>
       <div class="field" data-id="litsMoy" data-label="Lits par établissement" data-sub="moyenne" data-value="87" data-min="1" data-unit="lits"></div>
       <div class="hint" id="litsHint" style="margin:-10px 0 16px"></div>
 
@@ -379,7 +379,7 @@ $('segView').querySelectorAll('button').forEach(b => b.addEventListener('click',
   horizonByView[view] = Math.round(num('horizon'));
   view = b.dataset.view; selectIn($('segView'), b);
   $('horizon').value = horizonByView[view];
-  const c = $('cible'); c.max = VIEWS[view].etab; c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
+  const c = $('cible'); c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
 }));
 
 
@@ -406,7 +406,7 @@ function deployMonths(cible, deja, objJuin, rythme) {
 
 // La durée de la simulation ne peut pas être plus courte que le déploiement complet.
 function minHorizon() {
-  const cible = Math.min(VIEWS[view].etab, Math.max(1, Math.round(num('cible'))));
+  const cible = Math.max(1, Math.round(num('cible')));
   return Math.max(1, Math.ceil(deployMonths(cible, Math.round(num('deja')), Math.round(num('objJuin')), Math.round(num('rythme'))) / 12));
 }
 function enforceHorizon() {
@@ -420,7 +420,7 @@ function inputs() {
   const v = VIEWS[view];
   return {
     view, viewLabel: v.label, parc: v.etab, litsApprox: v.litsApprox,
-    cible: Math.min(v.etab, Math.max(1, Math.round(num('cible')))),
+    cible: Math.max(1, Math.round(num('cible'))),
     litsMoy: num('litsMoy'),
     deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
     horizon: Math.max(minHorizon(), Math.round(num('horizon'))),
@@ -581,10 +581,10 @@ function render() {
   // Cartes de vue : reflètent le nombre d'établissements saisi pour chacune.
   for (const v of Object.keys(VIEWS)) {
     const n = v === view ? i.cible : cibleByView[v];
-    const full = n >= VIEWS[v].etab;
-    $(`vsub-${v}`).textContent = full
+    const parc = VIEWS[v].etab;
+    $(`vsub-${v}`).textContent = n === parc
       ? `${fmtN(n)} établissements · environ ${fmtN(VIEWS[v].litsApprox)} lits`
-      : `${fmtN(n)} établissements sur ${fmtN(VIEWS[v].etab)} · ${fmtN(n * i.litsMoy)} lits`;
+      : `${fmtN(n)} établissements (parc actuel : ${fmtN(parc)}) · ${fmtN(n * i.litsMoy)} lits`;
   }
   $('resTitle').textContent = `Résultats sur ${i.horizon} ans · ${i.viewLabel}`;
   tween($('kTotal'), sum('total'), fmtE);
