@@ -217,23 +217,8 @@
       <details class="sec"><summary><span class="stitle">3 · Matériel par établissement</span><span class="recap" id="recap3"></span></summary>
       <div class="secbody">
       <div class="field">
-        <span class="lbl">Volume de téléphones par établissement<small>Choisissez comment le calculer :</small></span>
-        <div class="seg" id="seg" role="radiogroup">
-          <button type="button" data-mode="telephones" aria-pressed="true" role="radio">
-            <span class="num">1</span>
-            <span><b>Nombre moyen de téléphones</b>Je saisis directement le nombre moyen de téléphones par établissement.</span>
-          </button>
-          <button type="button" data-mode="soignants" aria-pressed="false" role="radio">
-            <span class="num">2</span>
-            <span><b>Selon les soignants présents</b>Je compte les soignants présents en même temps dans l'établissement, par profil (AS, IDE, paramédicaux, IDEC).</span>
-          </button>
-        </div>
-        <div class="panel open" id="panelTel"><div>
-          <div class="field" data-id="tel" data-label="Téléphones par établissement" data-sub="moyenne sur l'ensemble des établissements" data-value="20" data-unit="tél." style="margin-bottom:6px"></div>
-          <div class="hint">Repère : un téléphone par soignant présent au moment où ils sont le plus nombreux.</div>
-        </div></div>
-        <div class="panel" id="panelSoignants"><div>
-          <div class="explain">Chaque soignant présent doit avoir son téléphone. Indiquez, pour un établissement type, le <b>nombre maximum de soignants présents en même temps</b> pour chaque profil.</div>
+        <span class="lbl">Téléphones par établissement<small>Un téléphone par soignant présent.</small></span>
+        <div class="explain">Veuillez indiquer le <b>nombre maximum de soignants présents sur l'établissement en même temps</b> pour chaque profil.</div>
           <div class="staff">
             <div class="field" data-id="as" data-label="AS" data-sub="aides-soignants" data-value="12"></div>
             <div class="field" data-id="ide" data-label="IDE" data-sub="infirmiers" data-value="3"></div>
@@ -241,7 +226,6 @@
             <div class="field" data-id="idec" data-label="IDEC" data-sub="infirmier coordinateur" data-value="1"></div>
           </div>
           <div class="total-staff"><span>= téléphones par établissement</span><b id="staffTotal">20</b></div>
-        </div></div>
       </div>
       <div class="field" data-id="bornes" data-label="Bornes de charge par établissement" data-sub="moyenne" data-value="2"></div>
       <div class="field" data-id="chargeurs" data-label="Chargeurs individuels par établissement" data-sub="moyenne" data-value="2"></div>
@@ -394,15 +378,6 @@ $('segView').querySelectorAll('button').forEach(b => b.addEventListener('click',
   const c = $('cible'); c.max = VIEWS[view].etab; c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
 }));
 
-// Volume de téléphones : nombre moyen ou comptage des soignants.
-let mode = 'telephones';
-$('seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-  mode = b.dataset.mode; selectIn($('seg'), b);
-  $('panelTel').classList.toggle('open', mode === 'telephones');
-  $('panelSoignants').classList.toggle('open', mode === 'soignants');
-  if (mode === 'telephones') { $('tel').value = staffTotal(); $('tel').dispatchEvent(new Event('input')); }
-  render();
-}));
 
 // Chiffres qui défilent jusqu'à leur valeur (même courbe que le site Speakli).
 function tween(el, to, fmt) {
@@ -426,8 +401,8 @@ function inputs() {
     litsMoy: num('litsMoy'),
     deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
     horizon: Math.min(20, Math.max(1, Math.round(num('horizon')))),
-    mode, staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
-    tel: mode === 'soignants' ? staffTotal() : num('tel'), bornes: num('bornes'), chargeurs: num('chargeurs'),
+    staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
+    tel: staffTotal(), bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
     pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
     pFormation: SETUP.formation, pParam: SETUP.param,
@@ -710,8 +685,8 @@ $('export').addEventListener('click', async () => {
     ['Périmètre', i.viewLabel], ['Établissements à équiper', i.cible], ['Lits par établissement (moyenne)', i.litsMoy],
     ['Lits du parc, pour repère', `environ ${fmtN(i.litsApprox)}`], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements équipés fin juin 2027', i.objJuin],
     ['Nouveaux établissements par mois à partir de juillet 2027', i.rythme], ['Durée de la simulation (années)', i.horizon],
-    ['Téléphones par établissement', i.tel],
-    ...(i.mode === 'soignants' ? i.staff.map(st => [`   dont ${st.label} (présents en même temps)`, st.n]) : []),
+    ['Téléphones par établissement (= soignants présents en même temps, au maximum)', i.tel],
+    ...i.staff.map(st => [`   dont ${st.label}`, st.n]),
     ['Bornes de charge par établissement', i.bornes], ['Chargeurs individuels par établissement', i.chargeurs],
     ['Renouvellement annuel (maintenance)', `${Math.round(i.pct * 100)} %`], ['Renouvellement complet tous les (années)', i.cycle],
     ['Prix téléphone (€ HT)', i.pTel], ['Prix borne de charge (€ HT)', i.pBorne], ['Prix chargeur individuel (€ HT)', i.pChargeur],
