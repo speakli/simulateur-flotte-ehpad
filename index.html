@@ -209,8 +209,8 @@
       <div class="secbody">
       <div class="field" data-id="deja" data-label="Établissements déjà équipés fin 2026" data-sub="matériel et mise en place déjà faits" data-value="2"></div>
       <div class="field" data-id="objJuin" data-label="Établissements équipés fin juin 2027" data-sub="déploiement progressif de janvier à juin" data-value="19"></div>
-      <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois"></div>
-      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027" data-value="10" data-unit="ans" data-min="1" data-max="20"></div>
+      <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois" data-min="1"></div>
+      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027 · au minimum le temps d'équiper tout le parc" data-value="10" data-unit="ans" data-min="1" data-max="30"></div>
       <div class="hint" id="planHint" style="margin:-10px 0 16px"></div>
 
       </div></details>
@@ -339,9 +339,9 @@ document.querySelectorAll('.field[data-id]').forEach(f => {
   const input = f.querySelector('input'), box = f.querySelector('.stepper');
   const fit = () => { if (unit) input.style.width = Math.max(2, String(input.value).length + 0.6) + 'ch'; };
   fit(); input.addEventListener('input', fit);
-  const step = parseFloat(d.step || 1), min = parseFloat(d.min || 0);
+  const step = parseFloat(d.step || 1);
   const nudge = dir => {
-    const max = input.max ? parseFloat(input.max) : Infinity;
+    const max = input.max ? parseFloat(input.max) : Infinity, min = parseFloat(input.min || 0);
     const cur = parseFloat(input.value) || 0;
     const next = Math.min(max, Math.max(min, Math.round((cur + dir * step) / step) * step));
     input.value = +next.toFixed(2); fit();
@@ -393,6 +393,25 @@ function tween(el, to, fmt) {
   el._raf = requestAnimationFrame(tick);
 }
 
+/* Nombre de mois pour équiper tous les établissements visés (même règle que le plan de simulate()). */
+function deployMonths(cible, deja, objJuin, rythme) {
+  if (cible <= deja) return 0;
+  for (let m = 1; m <= 6; m++) if (deja + Math.round((objJuin - deja) * m / 6) >= cible) return m;
+  return 6 + Math.ceil((cible - Math.max(objJuin, deja)) / Math.max(1, rythme));
+}
+
+// La durée de la simulation ne peut pas être plus courte que le déploiement complet.
+function minHorizon() {
+  const cible = Math.min(VIEWS[view].etab, Math.max(1, Math.round(num('cible'))));
+  return Math.max(1, Math.ceil(deployMonths(cible, Math.round(num('deja')), Math.round(num('objJuin')), Math.round(num('rythme'))) / 12));
+}
+function enforceHorizon() {
+  const h = $('horizon'), min = minHorizon();
+  h.min = min; h.max = Math.max(30, min);
+  if ((parseFloat(h.value) || 0) < min && document.activeElement !== h) { h.value = min; h.dispatchEvent(new Event('input')); }
+  return min;
+}
+
 function inputs() {
   const v = VIEWS[view];
   return {
@@ -400,7 +419,7 @@ function inputs() {
     cible: Math.min(v.etab, Math.max(1, Math.round(num('cible')))),
     litsMoy: num('litsMoy'),
     deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
-    horizon: Math.min(20, Math.max(1, Math.round(num('horizon')))),
+    horizon: Math.max(minHorizon(), Math.round(num('horizon'))),
     staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
     tel: staffTotal(), bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
@@ -463,7 +482,7 @@ function simulate(i) {
     rows.push(r);
   }
   const done = actifs.findIndex(n => n >= i.cible);
-  return { rows, monthly, doneMonth: done > 0 ? done : null };
+  return { rows, monthly, doneMonth: done >= 0 ? done : null };
 }
 
 function chartConfig(series, rows, title, forExport) {
@@ -512,6 +531,7 @@ function drawChart(id, series, rows) {
 }
 
 function render() {
+  const minH = enforceHorizon();
   const i = inputs(), { rows, doneMonth } = simulate(i);
   const sum = k => rows.reduce((a, r) => a + r[k], 0);
   const last = rows[rows.length - 1];
@@ -519,9 +539,10 @@ function render() {
   $('staffTotal').textContent = staffTotal();
   const litsParc = i.cible * i.litsMoy;
   $('litsHint').innerHTML = `= <b>${fmtN(litsParc)} lits</b> une fois ces établissements équipés (pour repère, ${i.viewLabel} : environ ${fmtN(i.litsApprox)} lits)`;
-  $('planHint').innerHTML = doneMonth
+  const minNote = ` Durée minimale de la simulation : <b>${minH} an${minH > 1 ? 's' : ''}</b>.`;
+  $('planHint').innerHTML = (doneMonth !== null
     ? `Les ${fmtN(i.cible)} établissements sont équipés en <b>${fmtMonth(doneMonth)}</b>.`
-    : `À ce rythme, <b>${fmtN(last.actifsFin)} établissements sur ${fmtN(i.cible)}</b> sont équipés fin ${last.y}.`;
+    : `À ce rythme, <b>${fmtN(last.actifsFin)} établissements sur ${fmtN(i.cible)}</b> sont équipés fin ${last.y}.`) + minNote;
   $('chHint').textContent = i.chargeurs ? '' : 'Aucun chargeur prévu : renseignez le nombre de chargeurs par établissement plus haut.';
 
   const reached = new Set(rows.map(r => r.tier));
@@ -555,6 +576,7 @@ function render() {
 }
 
 document.querySelectorAll('form input').forEach(el => el.addEventListener('input', render));
+$('horizon').addEventListener('blur', render);
 // Laisse les blocs apparaître avant que les chiffres et les barres ne montent.
 setTimeout(render, reduceMotion ? 0 : 650);
 
