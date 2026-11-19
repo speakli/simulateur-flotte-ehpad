@@ -156,8 +156,7 @@ function chartConfig(i, rows, forExport) {
     data: {
       labels: rows.map(r => String(r.y)),
       datasets: SERIES.map(s => ({
-        label: s.label, backgroundColor: s.color, borderColor: '#ffffff', borderWidth: { top: 2 },
-        borderRadius: 4, borderSkipped: 'bottom', maxBarThickness: 48,
+        label: s.label, backgroundColor: s.color, borderWidth: 0, maxBarThickness: 48,
         data: rows.map(r => r[s.key] * (1 + i.tva)),
       })),
     },
