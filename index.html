@@ -210,7 +210,7 @@
       <div class="field" data-id="deja" data-label="Établissements déjà équipés fin 2026" data-sub="matériel et mise en place déjà faits" data-value="2"></div>
       <div class="field" data-id="objJuin" data-label="Établissements équipés fin juin 2027" data-sub="déploiement progressif de janvier à juin" data-value="19"></div>
       <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois" data-min="1"></div>
-      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027 · au minimum le temps d'équiper tout le parc" data-value="10" data-unit="ans" data-min="1" data-max="30"></div>
+      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027 · au minimum le temps d'équiper tout le parc" data-value="2" data-unit="ans" data-min="1" data-max="30"></div>
       <div class="hint" id="planHint" style="margin:-10px 0 16px"></div>
 
       </div></details>
@@ -371,10 +371,14 @@ function selectIn(group, btn) {
 // Vue emeis France / emeis Groupe : chaque vue retient son propre nombre d'établissements à équiper.
 let view = 'france';
 const cibleByView = { france: VIEWS.france.etab, groupe: VIEWS.groupe.etab };
+// Durée par défaut : 2 ans pour la France, 10 ans pour le Groupe ; chaque vue retient ensuite la sienne.
+const horizonByView = { france: 2, groupe: 10 };
 $('segView').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.view === view) return;
   cibleByView[view] = Math.round(num('cible'));
+  horizonByView[view] = Math.round(num('horizon'));
   view = b.dataset.view; selectIn($('segView'), b);
+  $('horizon').value = horizonByView[view];
   const c = $('cible'); c.max = VIEWS[view].etab; c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
 }));
 
