@@ -153,6 +153,25 @@
     font-size: 11px; font-weight: 800; margin-right: 6px; border: 1.5px solid var(--line); }
   .tiers tr.reached .n { background: var(--sp-500); color: #fff; border-color: var(--sp-500); }
   .chartbox.sm { height: 300px; }
+  /* Sections repliables du formulaire */
+  :root { interpolate-size: allow-keywords; }
+  details.sec { margin: 0; border-bottom: 1px solid rgba(0, 40, 120, .07); }
+  details.sec:last-of-type { border-bottom: 0; }
+  details.sec > summary { list-style: none; display: flex; flex-direction: column; gap: 2px; padding: 16px 30px 16px 0;
+    position: relative; cursor: pointer; color: inherit; font-size: inherit; }
+  details.sec > summary::-webkit-details-marker { display: none; }
+  details.sec > summary::after { content: ""; position: absolute; right: 4px; top: 19px; width: 8px; height: 8px;
+    border-right: 2px solid var(--sp-500); border-bottom: 2px solid var(--sp-500); transform: rotate(45deg);
+    transition: transform .3s var(--ease); }
+  details.sec[open] > summary::after { transform: rotate(-135deg); top: 23px; }
+  details.sec > summary:hover .stitle { color: var(--sp-600); }
+  .stitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--sp-500); transition: color .2s; }
+  .recap { font-size: 12.5px; font-weight: 400; color: var(--muted); line-height: 1.4; }
+  details.sec[open] .recap { display: none; }
+  details.sec .secbody { padding-bottom: 8px; }
+  details.sec::details-content { height: 0; overflow: clip; transition: height .4s var(--ease), content-visibility .4s allow-discrete; }
+  details.sec[open]::details-content { height: auto; }
+  form.card { padding-top: 10px; padding-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -164,7 +183,8 @@
 
   <div class="grid">
     <form class="card reveal" style="animation-delay:.45s" onsubmit="return false">
-      <p class="section-title">1 · Périmètre</p>
+      <details class="sec" open><summary><span class="stitle">1 · Périmètre</span><span class="recap" id="recap1"></span></summary>
+      <div class="secbody">
       <div class="field">
         <span class="lbl">Parc à équiper</span>
         <div class="seg" id="segView" role="radiogroup">
@@ -182,16 +202,18 @@
       <div class="field" data-id="litsMoy" data-label="Lits par établissement" data-sub="moyenne" data-value="87" data-min="1" data-unit="lits"></div>
       <div class="hint" id="litsHint" style="margin:-10px 0 16px"></div>
 
-      <div class="divider"></div>
-      <p class="section-title">2 · Plan de déploiement</p>
+      </div></details>
+      <details class="sec" open><summary><span class="stitle">2 · Plan de déploiement</span><span class="recap" id="recap2"></span></summary>
+      <div class="secbody">
       <div class="field" data-id="deja" data-label="Établissements déjà équipés fin 2026" data-sub="matériel et mise en place déjà faits" data-value="2"></div>
       <div class="field" data-id="objJuin" data-label="Établissements équipés fin juin 2027" data-sub="déploiement progressif de janvier à juin" data-value="19"></div>
       <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois"></div>
       <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027" data-value="10" data-unit="ans" data-min="1" data-max="20"></div>
       <div class="hint" id="planHint" style="margin:-10px 0 16px"></div>
 
-      <div class="divider"></div>
-      <p class="section-title">3 · Matériel par établissement</p>
+      </div></details>
+      <details class="sec"><summary><span class="stitle">3 · Matériel par établissement</span><span class="recap" id="recap3"></span></summary>
+      <div class="secbody">
       <div class="field">
         <span class="lbl">Volume de téléphones par établissement<small>Choisissez comment le calculer :</small></span>
         <div class="seg" id="seg" role="radiogroup">
@@ -224,19 +246,22 @@
       <div class="field" data-id="pct" data-label="Renouvellement annuel (maintenance)" data-sub="part de la flotte remplacée chaque année" data-value="10" data-unit="%" data-max="100"></div>
       <div class="field" data-id="cycle" data-label="Renouvellement complet tous les" data-sub="compté à partir de l'équipement de chaque établissement" data-value="5" data-unit="ans" data-min="1"></div>
 
-      <div class="divider"></div>
-      <p class="section-title">4 · Prix du matériel</p>
+      </div></details>
+      <details class="sec"><summary><span class="stitle">4 · Prix du matériel</span><span class="recap" id="recap4"></span></summary>
+      <div class="secbody">
       <div class="field" data-id="pTel" data-label="Téléphone" data-value="141.67" data-unit="€ HT" data-step="1"></div>
       <div class="field" data-id="pBorne" data-label="Borne de charge" data-value="45" data-unit="€ HT" data-step="5"></div>
       <div class="field" data-id="pChargeur" data-label="Chargeur individuel" data-value="15" data-unit="€ HT"></div>
       <div class="hint warn" id="chHint" style="margin:-10px 0 16px"></div>
 
-      <div class="divider"></div>
-      <p class="section-title">5 · Prix Speakli</p>
+      </div></details>
+      <details class="sec"><summary><span class="stitle">5 · Prix Speakli</span><span class="recap" id="recap5"></span></summary>
+      <div class="secbody">
       <div class="field" data-id="pFormation" data-label="Formation" data-sub="par nouvel établissement, payée une fois" data-value="1590" data-unit="€ HT" data-step="10"></div>
       <div class="field" data-id="pParam" data-label="Paramétrage" data-sub="par nouvel établissement, payé une fois" data-value="995" data-unit="€ HT" data-step="5"></div>
       <span class="lbl" style="display:block;font-size:13px;font-weight:600;margin-top:4px">Abonnement, par lit et par mois<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">Tout le parc est facturé au prix du palier atteint. Contrats annuels : un palier franchi s'applique au 1er janvier suivant.</small></span>
       <table class="tiers" id="tiers"></table>
+      </div></details>
     </form>
 
     <section>
@@ -522,6 +547,14 @@ function render() {
     return `<tr class="${reached.has(k) ? 'reached' : ''}${na ? ' na' : ''}"><td><span class="n">${k + 1}</span>${t.label}</td><td>${fmtE2(t.price)}</td></tr>`;
   }).join('');
 
+  const recap = {
+    recap1: `${i.viewLabel} · ${fmtN(i.cible)} établissements · ${fmtN(i.litsMoy)} lits / établ.`,
+    recap2: `${i.deja} → ${i.objJuin} fin juin 2027, puis ${i.rythme} / mois · ${i.horizon} ans`,
+    recap3: `${fmtN(i.tel)} tél. · ${fmtN(i.bornes)} bornes · ${fmtN(i.chargeurs)} chargeurs · ${Math.round(i.pct * 100)} % / an · complet tous les ${i.cycle} ans`,
+    recap4: `Téléphone ${fmtE2(i.pTel)} · borne ${fmtE2(i.pBorne)} · chargeur ${fmtE2(i.pChargeur)}`,
+    recap5: `Mise en place ${fmtE(i.pFormation + i.pParam)} / établ. · abonnement de ${fmtE2(TIERS[3].price)} à ${fmtE2(TIERS[0].price)} / lit / mois`,
+  };
+  Object.entries(recap).forEach(([k, v]) => { $(k).textContent = v; });
   $('resTitle').textContent = `Résultats sur ${i.horizon} ans · ${i.viewLabel}`;
   tween($('kTotal'), sum('total'), fmtE);
   tween($('kParc'), last.actifsFin, fmtN);
