@@ -236,6 +236,7 @@
       <details class="sec"><summary><span class="stitle">4 · Prix du matériel</span><span class="recap" id="recap4"></span></summary>
       <div class="secbody">
       <div class="field" data-id="pTel" data-label="Téléphone" data-value="141.67" data-unit="€ HT" data-step="1"></div>
+      <div class="field" data-id="pCoque" data-label="Coque de téléphone" data-sub="une par téléphone" data-value="10" data-unit="€ HT"></div>
       <div class="field" data-id="pBorne" data-label="Borne de charge" data-value="45" data-unit="€ HT" data-step="5"></div>
       <div class="field" data-id="pChargeur" data-label="Chargeur individuel" data-value="15" data-unit="€ HT"></div>
       <div class="hint warn" id="chHint" style="margin:-10px 0 16px"></div>
@@ -309,8 +310,9 @@ const TIERS = [
 const SETUP = { formation: 1590, param: 995 };
 const EXCEL_PASSWORD = 'speakli';
 const tierOf = lits => TIERS.findIndex(t => lits <= t.upTo);
+const HW_TYPES = ['tel', 'coques', 'bornes', 'chargeurs'];
 const HW_SERIES = [
-  { key: 'cTel', label: 'Téléphones', color: '#007aff' },
+  { key: 'cTelCoques', label: 'Téléphones et coques', color: '#007aff' },
   { key: 'cBornes', label: 'Bornes de charge', color: '#f07d00' },
   { key: 'cChargeurs', label: 'Chargeurs individuels', color: '#8b5cf6' },
 ];
@@ -427,7 +429,7 @@ function inputs() {
     staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
     tel: staffTotal(), bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
-    pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
+    pTel: num('pTel'), pCoque: num('pCoque'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
     pFormation: SETUP.formation, pParam: SETUP.param,
   };
 }
@@ -458,8 +460,9 @@ function simulate(i) {
 
   // Matériel par cohorte (année d'équipement). La cohorte 2026 est déjà équipée : pas d'achat initial.
   const cohort = { [START - 1]: actifs[0] };
-  const kit = { tel: i.tel, bornes: i.bornes, chargeurs: i.chargeurs };
-  const price = { tel: i.pTel, bornes: i.pBorne, chargeurs: i.pChargeur };
+  // Une coque par téléphone : mêmes achats, maintenance et renouvellements que les téléphones.
+  const kit = { tel: i.tel, coques: i.tel, bornes: i.bornes, chargeurs: i.chargeurs };
+  const price = { tel: i.pTel, coques: i.pCoque, bornes: i.pBorne, chargeurs: i.pChargeur };
   const rows = []; let cumul = 0;
   for (let k = 0; k < i.horizon; k++) {
     const y = START + k, ms = monthly.filter(x => x.y === y);
@@ -470,14 +473,15 @@ function simulate(i) {
     }
     const r = { y, nouveaux: cohort[y], actifsFin: ms[ms.length - 1].actifs, litsFin: ms[ms.length - 1].lits,
       tier: ms[0].tier, price: ms[0].price };
-    for (const t of ['tel', 'bornes', 'chargeurs']) {
+    for (const t of HW_TYPES) {
       const inst = Math.round(cohort[y] * kit[t]), ren = Math.round(renew * kit[t]);
       const maint = Math.ceil(Math.round(maintBase * kit[t]) * i.pct - 1e-9);
       r[t] = { inst, ren, maint, qty: inst + ren + maint };
     }
-    r.cTel = r.tel.qty * price.tel; r.cBornes = r.bornes.qty * price.bornes; r.cChargeurs = r.chargeurs.qty * price.chargeurs;
-    r.hw = r.cTel + r.cBornes + r.cChargeurs;
-    r.hwMaint = ['tel', 'bornes', 'chargeurs'].reduce((a, t) => a + r[t].maint * price[t], 0);
+    r.cTel = r.tel.qty * price.tel; r.cCoques = r.coques.qty * price.coques; r.cTelCoques = r.cTel + r.cCoques;
+    r.cBornes = r.bornes.qty * price.bornes; r.cChargeurs = r.chargeurs.qty * price.chargeurs;
+    r.hw = r.cTelCoques + r.cBornes + r.cChargeurs;
+    r.hwMaint = HW_TYPES.reduce((a, t) => a + r[t].maint * price[t], 0);
     r.formation = ms.reduce((a, x) => a + x.formation, 0);
     r.param = ms.reduce((a, x) => a + x.param, 0);
     r.setup = r.formation + r.param;
@@ -488,7 +492,7 @@ function simulate(i) {
   }
   // Matériel au mois près : nouveau matériel le mois de l'équipement, renouvellement complet le même mois
   // tous les « cycle » ans, maintenance de l'année répartie sur ses 12 mois. Les sommes retombent sur l'annuel.
-  const kitCost = i.tel * i.pTel + i.bornes * i.pBorne + i.chargeurs * i.pChargeur;
+  const kitCost = HW_TYPES.reduce((a, t) => a + kit[t] * price[t], 0);
   const equippedAt = m => (m === 0 ? actifs[0] : actifs[m] - actifs[m - 1]);
   const cycleMonths = 12 * i.cycle;
   monthly.forEach(x => {
@@ -574,7 +578,7 @@ function render() {
     recap1: `${i.viewLabel} · ${fmtN(i.cible)} établissements · ${fmtN(i.litsMoy)} lits / établ.`,
     recap2: `${i.deja} → ${i.objJuin} fin juin 2027, puis ${i.rythme} / mois · ${i.horizon} ans`,
     recap3: `${fmtN(i.tel)} tél. · ${fmtN(i.bornes)} bornes · ${fmtN(i.chargeurs)} chargeurs · ${Math.round(i.pct * 100)} % / an · complet tous les ${i.cycle} ans`,
-    recap4: `Téléphone ${fmtE2(i.pTel)} · borne ${fmtE2(i.pBorne)} · chargeur ${fmtE2(i.pChargeur)}`,
+    recap4: `Téléphone ${fmtE2(i.pTel)} · coque ${fmtE2(i.pCoque)} · borne ${fmtE2(i.pBorne)} · chargeur ${fmtE2(i.pChargeur)}`,
     recap5: `Mise en place ${fmtE(i.pFormation + i.pParam)} / établ. · abonnement de ${fmtE2(TIERS[3].price)} à ${fmtE2(TIERS[0].price)} / lit / mois`,
   };
   Object.entries(recap).forEach(([k, v]) => { $(k).textContent = v; });
@@ -688,9 +692,11 @@ $('export').addEventListener('click', async () => {
     { h: 'Téléphones (nouveaux étab.)', v: r => r.tel.inst, f: int, sum: true, w: 14 },
     { h: 'Téléphones (maintenance)', v: r => r.tel.maint, f: int, sum: true, w: 14 },
     { h: 'Téléphones (renouvellement)', v: r => r.tel.ren, f: int, sum: true, w: 15 },
+    { h: 'Coques achetées', v: r => r.coques.qty, f: int, sum: true, w: 12 },
     { h: 'Bornes achetées', v: r => r.bornes.qty, f: int, sum: true, w: 12 },
     { h: 'Chargeurs achetés', v: r => r.chargeurs.qty, f: int, sum: true, w: 12 },
     { h: 'Coût téléphones', v: r => r.cTel, f: eur, sum: true, w: 15 },
+    { h: 'Coût coques', v: r => r.cCoques, f: eur, sum: true, w: 13 },
     { h: 'Coût bornes', v: r => r.cBornes, f: eur, sum: true, w: 13 },
     { h: 'Coût chargeurs', v: r => r.cChargeurs, f: eur, sum: true, w: 13 },
     { h: 'Total matériel', v: r => r.hw, f: eur, sum: true, w: 15 },
@@ -743,7 +749,7 @@ $('export').addEventListener('click', async () => {
     ...i.staff.map(st => [`   dont ${st.label}`, st.n]),
     ['Bornes de charge par établissement', i.bornes], ['Chargeurs individuels par établissement', i.chargeurs],
     ['Renouvellement annuel (maintenance)', `${Math.round(i.pct * 100)} %`], ['Renouvellement complet tous les (années)', i.cycle],
-    ['Prix téléphone (€ HT)', i.pTel], ['Prix borne de charge (€ HT)', i.pBorne], ['Prix chargeur individuel (€ HT)', i.pChargeur],
+    ['Prix téléphone (€ HT)', i.pTel], ['Prix coque de téléphone (€ HT, une par téléphone)', i.pCoque], ['Prix borne de charge (€ HT)', i.pBorne], ['Prix chargeur individuel (€ HT)', i.pChargeur],
     ['Formation par nouvel établissement (€ HT)', i.pFormation], ['Paramétrage par nouvel établissement (€ HT)', i.pParam],
     ...TIERS.map((t, k) => [`Abonnement palier ${k + 1} (${t.label}), € HT / lit / mois`, t.price]),
   ];
