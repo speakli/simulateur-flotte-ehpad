@@ -190,11 +190,11 @@
         <div class="seg" id="segView" role="radiogroup">
           <button type="button" data-view="france" aria-pressed="true" role="radio">
             <span class="num">FR</span>
-            <span><b>emeis France</b>229 établissements · jusqu'à 20 000 lits</span>
+            <span><b>emeis France</b>229 établissements · environ 20 000 lits</span>
           </button>
           <button type="button" data-view="groupe" aria-pressed="false" role="radio">
             <span class="num">GR</span>
-            <span><b>emeis Groupe</b>815 établissements · jusqu'à 90 000 lits</span>
+            <span><b>emeis Groupe</b>815 établissements · environ 90 000 lits</span>
           </button>
         </div>
       </div>
@@ -309,8 +309,8 @@ const fmtMonth = m => new Date(START, m - 1, 1).toLocaleDateString('fr-FR', { mo
 
 const START = 2027;
 const VIEWS = {
-  france: { label: 'emeis France', etab: 229, litsMax: 20000 },
-  groupe: { label: 'emeis Groupe', etab: 815, litsMax: 90000 },
+  france: { label: 'emeis France', etab: 229, litsApprox: 20000 },
+  groupe: { label: 'emeis Groupe', etab: 815, litsApprox: 90000 },
 };
 const TIERS = [
   { label: '0 – 20 000 lits', upTo: 20000, price: 7.25 },
@@ -378,11 +378,14 @@ function selectIn(group, btn) {
   group.querySelectorAll('button').forEach(x => { x.setAttribute('aria-pressed', x === btn); x.setAttribute('aria-checked', x === btn); });
 }
 
-// Vue emeis France / emeis Groupe : fixe la taille du parc et le plafond de lits.
+// Vue emeis France / emeis Groupe : chaque vue retient son propre nombre d'établissements à équiper.
 let view = 'france';
+const cibleByView = { france: VIEWS.france.etab, groupe: VIEWS.groupe.etab };
 $('segView').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.view === view) return;
+  cibleByView[view] = Math.round(num('cible'));
   view = b.dataset.view; selectIn($('segView'), b);
-  const c = $('cible'); c.max = VIEWS[view].etab; c.value = VIEWS[view].etab; c.dispatchEvent(new Event('input'));
+  const c = $('cible'); c.max = VIEWS[view].etab; c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
 }));
 
 // Volume de téléphones : nombre moyen ou comptage des soignants.
@@ -412,7 +415,7 @@ function tween(el, to, fmt) {
 function inputs() {
   const v = VIEWS[view];
   return {
-    view, viewLabel: v.label, parc: v.etab, litsMax: v.litsMax,
+    view, viewLabel: v.label, parc: v.etab, litsApprox: v.litsApprox,
     cible: Math.min(v.etab, Math.max(1, Math.round(num('cible')))),
     litsMoy: num('litsMoy'),
     deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
@@ -438,7 +441,7 @@ function simulate(i) {
     else n = i.objJuin + i.rythme * (m - 6);
     actifs.push(Math.min(i.cible, Math.max(m ? actifs[m - 1] : 0, n)));
   }
-  const lits = m => Math.min(actifs[m] * i.litsMoy, i.litsMax);
+  const lits = m => actifs[m] * i.litsMoy;
 
   const monthly = [];
   for (let m = 1; m <= months; m++) {
@@ -534,8 +537,7 @@ function render() {
 
   $('staffTotal').textContent = staffTotal();
   const litsParc = i.cible * i.litsMoy;
-  $('litsHint').innerHTML = `= <b>${fmtN(Math.min(litsParc, i.litsMax))} lits</b> une fois le parc équipé` +
-    (litsParc > i.litsMax ? ` (plafonné à ${fmtN(i.litsMax)} lits pour ${i.viewLabel})` : ` (plafond ${i.viewLabel} : ${fmtN(i.litsMax)} lits)`);
+  $('litsHint').innerHTML = `= <b>${fmtN(litsParc)} lits</b> une fois ces établissements équipés (pour repère, ${i.viewLabel} : environ ${fmtN(i.litsApprox)} lits)`;
   $('planHint').innerHTML = doneMonth
     ? `Les ${fmtN(i.cible)} établissements sont équipés en <b>${fmtMonth(doneMonth)}</b>.`
     : `À ce rythme, <b>${fmtN(last.actifsFin)} établissements sur ${fmtN(i.cible)}</b> sont équipés fin ${last.y}.`;
@@ -543,8 +545,7 @@ function render() {
 
   const reached = new Set(rows.map(r => r.tier));
   $('tiers').innerHTML = TIERS.map((t, k) => {
-    const na = i.view === 'france' && k > 0;
-    return `<tr class="${reached.has(k) ? 'reached' : ''}${na ? ' na' : ''}"><td><span class="n">${k + 1}</span>${t.label}</td><td>${fmtE2(t.price)}</td></tr>`;
+    return `<tr class="${reached.has(k) ? 'reached' : ''}"><td><span class="n">${k + 1}</span>${t.label}</td><td>${fmtE2(t.price)}</td></tr>`;
   }).join('');
 
   const recap = {
@@ -700,7 +701,7 @@ $('export').addEventListener('click', async () => {
   titleCell(hy, 'Hypothèses de la simulation', 'Chiffres calculés par le simulateur en ligne : pour tester d\'autres hypothèses, utilisez le simulateur.');
   const H = [
     ['Périmètre', i.viewLabel], ['Établissements à équiper', i.cible], ['Lits par établissement (moyenne)', i.litsMoy],
-    ['Plafond de lits', i.litsMax], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements équipés fin juin 2027', i.objJuin],
+    ['Lits du parc, pour repère', `environ ${fmtN(i.litsApprox)}`], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements équipés fin juin 2027', i.objJuin],
     ['Nouveaux établissements par mois à partir de juillet 2027', i.rythme], ['Durée de la simulation (années)', i.horizon],
     ['Téléphones par établissement', i.tel],
     ...(i.mode === 'soignants' ? i.staff.map(st => [`   dont ${st.label} (présents en même temps)`, st.n]) : []),
