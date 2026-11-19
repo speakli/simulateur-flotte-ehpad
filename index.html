@@ -76,14 +76,18 @@
   .hint b { color: var(--sp-900); }
   .hint.warn { color: var(--danger); }
 
-  .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: var(--sp-50);
-    border-radius: 12px; padding: 4px; margin-bottom: 12px; }
-  .seg button { position: relative; z-index: 1; border: 0; background: none; padding: 8px 6px; font: 600 13px "Geist", sans-serif;
-    color: var(--muted); cursor: pointer; border-radius: 9px; transition: color .25s; }
-  .seg button[aria-pressed="true"] { color: var(--sp-900); }
-  .seg .pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background: #fff;
-    border-radius: 9px; box-shadow: 0 2px 8px rgba(0, 20, 80, .1); transition: transform .35s var(--ease); }
-  .seg[data-mode="soignants"] .pill { transform: translateX(100%); }
+  .seg { display: grid; gap: 8px; margin-bottom: 14px; }
+  .seg button { display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%; padding: 12px 14px;
+    border: 1.5px solid var(--line); background: var(--field); border-radius: 14px; cursor: pointer;
+    font: 400 12.5px/1.4 "Geist", sans-serif; color: var(--muted);
+    transition: border-color .25s, background .25s, box-shadow .25s, transform .2s var(--ease); }
+  .seg button:hover { transform: translateY(-1px); border-color: var(--sp-100); }
+  .seg button b { display: block; font-size: 14px; font-weight: 700; color: var(--sp-900); margin-bottom: 2px; }
+  .seg .num { flex: 0 0 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 800; font-size: 13px; background: #fff; color: var(--faint); border: 1.5px solid var(--line);
+    transition: background .25s, color .25s, border-color .25s; }
+  .seg button[aria-pressed="true"] { border-color: var(--sp-500); background: #fff; box-shadow: 0 0 0 4px rgba(0, 122, 255, .1); }
+  .seg button[aria-pressed="true"] .num { background: var(--sp-500); border-color: var(--sp-500); color: #fff; }
   .panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .45s var(--ease), opacity .3s; }
   .panel.open { grid-template-rows: 1fr; opacity: 1; }
   .panel > div { overflow: hidden; }
@@ -141,18 +145,23 @@
       <div class="field" data-id="etab" data-label="Nombre d'établissements" data-value="10"></div>
 
       <div class="field">
-        <span class="lbl">Téléphones par établissement</span>
-        <div class="seg" id="seg" data-mode="telephones">
-          <span class="pill"></span>
-          <button type="button" data-mode="telephones" aria-pressed="true">Je connais le nombre</button>
-          <button type="button" data-mode="soignants" aria-pressed="false">Je compte les soignants</button>
+        <span class="lbl">Volume de téléphones par établissement<small>Choisissez comment le calculer :</small></span>
+        <div class="seg" id="seg" data-mode="telephones" role="radiogroup">
+          <button type="button" data-mode="telephones" aria-pressed="true" role="radio">
+            <span class="num">1</span>
+            <span><b>Nombre moyen de téléphones</b>Je saisis directement le nombre moyen de téléphones par établissement.</span>
+          </button>
+          <button type="button" data-mode="soignants" aria-pressed="false" role="radio">
+            <span class="num">2</span>
+            <span><b>Selon les soignants présents</b>Je compte les soignants présents en même temps dans l'établissement, par profil (AS, IDE, paramédicaux, IDEC).</span>
+          </button>
         </div>
         <div class="panel open" id="panelTel"><div>
-          <div class="field" data-id="tel" data-value="20" data-unit="tél." style="margin-bottom:6px"></div>
-          <div class="hint">= nombre maximum de soignants présents en même temps (un téléphone chacun).</div>
+          <div class="field" data-id="tel" data-label="Téléphones par établissement" data-sub="moyenne sur l'ensemble des établissements" data-value="20" data-unit="tél." style="margin-bottom:6px"></div>
+          <div class="hint">Repère : un téléphone par soignant présent au moment où ils sont le plus nombreux.</div>
         </div></div>
         <div class="panel" id="panelSoignants"><div>
-          <div class="explain">Chaque soignant présent doit avoir son téléphone : comptez le <b>nombre maximum de soignants présents en même temps</b> dans un établissement type.</div>
+          <div class="explain">Chaque soignant présent doit avoir son téléphone. Indiquez, pour un établissement type, le <b>nombre maximum de soignants présents en même temps</b> pour chaque profil.</div>
           <div class="staff">
             <div class="field" data-id="as" data-label="AS" data-sub="aides-soignants" data-value="12"></div>
             <div class="field" data-id="ide" data-label="IDE" data-sub="infirmiers" data-value="3"></div>
@@ -262,7 +271,7 @@ const staffTotal = () => STAFF.reduce((a, [id]) => a + Math.round(num(id)), 0);
 $('seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
   mode = b.dataset.mode;
   $('seg').dataset.mode = mode;
-  $('seg').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  $('seg').querySelectorAll('button').forEach(x => { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); });
   $('panelTel').classList.toggle('open', mode === 'telephones');
   $('panelSoignants').classList.toggle('open', mode === 'soignants');
   if (mode === 'telephones') { $('tel').value = staffTotal(); $('tel').dispatchEvent(new Event('input')); }
