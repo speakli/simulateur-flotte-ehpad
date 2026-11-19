@@ -260,8 +260,8 @@
         </button>
       </div>
       <div class="kpis">
-        <div class="kpi total reveal" style="animation-delay:.55s"><div class="v" id="kTotal">0 €</div><div class="l">investissement total HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.6s"><div class="v" id="kParc">0</div><div class="l" id="kParcL">établissements équipés</div></div>
+        <div class="kpi total reveal" style="animation-delay:.55s"><div class="v" id="kAvg">0 €</div><div class="l" id="kAvgL">coût annuel moyen du projet HT</div></div>
+        <div class="kpi reveal" style="animation-delay:.6s"><div class="v" id="kTotal">0 €</div><div class="l" id="kTotalL">investissement total HT</div></div>
         <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHw">0 €</div><div class="l">dont matériel HT</div></div>
         <div class="kpi reveal" style="animation-delay:.7s"><div class="v" id="kSp">0 €</div><div class="l">dont Speakli HT (mise en place + abonnement)</div></div>
       </div>
@@ -561,8 +561,9 @@ function render() {
   Object.entries(recap).forEach(([k, v]) => { $(k).textContent = v; });
   $('resTitle').textContent = `Résultats sur ${i.horizon} ans · ${i.viewLabel}`;
   tween($('kTotal'), sum('total'), fmtE);
-  tween($('kParc'), last.actifsFin, fmtN);
-  $('kParcL').innerHTML = `établissements équipés fin ${last.y} · <b>${fmtN(last.litsFin)} lits</b>`;
+  tween($('kAvg'), sum('total') / i.horizon, fmtE);
+  $('kAvgL').textContent = `coût annuel moyen du projet HT (total ÷ ${i.horizon} ans)`;
+  $('kTotalL').textContent = `investissement total HT sur ${i.horizon} ans`;
   tween($('kHw'), sum('hw'), fmtE);
   tween($('kSp'), sum('sp'), fmtE);
 
