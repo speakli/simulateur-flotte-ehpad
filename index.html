@@ -153,6 +153,8 @@
     font-size: 11px; font-weight: 800; margin-right: 6px; border: 1.5px solid var(--line); }
   .tiers tr.reached .n { background: var(--sp-500); color: #fff; border-color: var(--sp-500); }
   .chartbox.sm { height: 300px; }
+  .tiers.fixed td:last-child { color: var(--sp-900); }
+  .fixednote { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); margin: 0 0 12px; }
   /* Sections repliables du formulaire */
   :root { interpolate-size: allow-keywords; }
   details.sec { margin: 0; border-bottom: 1px solid rgba(0, 40, 120, .07); }
@@ -255,10 +257,11 @@
       <div class="hint warn" id="chHint" style="margin:-10px 0 16px"></div>
 
       </div></details>
-      <details class="sec"><summary><span class="stitle">5 · Prix Speakli</span><span class="recap" id="recap5"></span></summary>
+      <details class="sec"><summary><span class="stitle">5 · Grille tarifaire Speakli</span><span class="recap" id="recap5"></span></summary>
       <div class="secbody">
-      <div class="field" data-id="pFormation" data-label="Formation" data-sub="par nouvel établissement, payée une fois" data-value="1590" data-unit="€ HT" data-step="10"></div>
-      <div class="field" data-id="pParam" data-label="Paramétrage" data-sub="par nouvel établissement, payé une fois" data-value="995" data-unit="€ HT" data-step="5"></div>
+      <p class="fixednote">🔒 Tarifs Speakli fixes, non modifiables.</p>
+      <span class="lbl" style="display:block;font-size:13px;font-weight:600">Mise en place<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">Par nouvel établissement, payée une seule fois.</small></span>
+      <table class="tiers fixed" id="setupTable"></table>
       <span class="lbl" style="display:block;font-size:13px;font-weight:600;margin-top:4px">Abonnement, par lit et par mois<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">Tout le parc est facturé au prix du palier atteint. Contrats annuels : un palier franchi s'applique au 1er janvier suivant.</small></span>
       <table class="tiers" id="tiers"></table>
       </div></details>
@@ -318,6 +321,9 @@ const TIERS = [
   { label: '40 001 – 70 000 lits', upTo: 70000, price: 6.75 },
   { label: '70 001 lits et plus', upTo: Infinity, price: 6.60 },
 ];
+// Tarifs Speakli figés : non modifiables sur le simulateur ni dans l'Excel.
+const SETUP = { formation: 1590, param: 995 };
+const EXCEL_PASSWORD = 'speakli';
 const tierOf = lits => TIERS.findIndex(t => lits <= t.upTo);
 const HW_SERIES = [
   { key: 'cTel', label: 'Téléphones', color: '#007aff' },
@@ -424,7 +430,7 @@ function inputs() {
     tel: mode === 'soignants' ? staffTotal() : num('tel'), bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
     pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
-    pFormation: num('pFormation'), pParam: num('pParam'),
+    pFormation: SETUP.formation, pParam: SETUP.param,
   };
 }
 
@@ -544,6 +550,7 @@ function render() {
   $('chHint').textContent = i.chargeurs ? '' : 'Aucun chargeur prévu : renseignez le nombre de chargeurs par établissement plus haut.';
 
   const reached = new Set(rows.map(r => r.tier));
+  $('setupTable').innerHTML = `<tr><td>Formation</td><td>${fmtE(SETUP.formation)}</td></tr><tr><td>Paramétrage</td><td>${fmtE(SETUP.param)}</td></tr>`;
   $('tiers').innerHTML = TIERS.map((t, k) => {
     return `<tr class="${reached.has(k) ? 'reached' : ''}"><td><span class="n">${k + 1}</span>${t.label}</td><td>${fmtE2(t.price)}</td></tr>`;
   }).join('');
@@ -712,7 +719,10 @@ $('export').addEventListener('click', async () => {
     ...TIERS.map((t, k) => [`Abonnement palier ${k + 1} (${t.label}), € HT / lit / mois`, t.price]),
   ];
   H.forEach(([l, v], k) => { hy.getCell(`A${4 + k}`).value = l; const c = hy.getCell(`B${4 + k}`); c.value = v; c.font = { bold: true }; });
-  wb.worksheets.forEach((ws, k) => { ws.orderNo = k; });
+  hy.getCell(`A${5 + H.length}`).value = 'Les tarifs Speakli (formation, paramétrage, abonnement) sont fixes.';
+  hy.getCell(`A${5 + H.length}`).font = grey;
+  // Feuilles protégées : les tarifs Speakli et les résultats ne sont pas modifiables (tri et filtres restent possibles).
+  await Promise.all(wb.worksheets.map(ws => ws.protect(EXCEL_PASSWORD, { selectLockedCells: true, selectUnlockedCells: true, sort: true, autoFilter: true, formatColumns: true })));
 
   const buf = await wb.xlsx.writeBuffer();
   const a = document.createElement('a');
