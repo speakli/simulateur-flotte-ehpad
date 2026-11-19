@@ -130,23 +130,71 @@
     .blur-word, .reveal { animation: none; opacity: 1; filter: none; transform: none; }
     .stepper.bump input { animation: none; }
   }
+  /* Ajouts : périmètre, plan, paliers, 2 graphiques */
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .kpi.total { background: var(--sp-900); }
+  .kpi.total .v { color: #fff; }
+  .kpi.total .l { color: rgba(255, 255, 255, .75); }
+  .kpi .l b { color: var(--sp-900); }
+  .reshead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .reshead h2 { font-family: "Source Serif 4", Georgia, serif; font-weight: 500; font-size: 24px; margin: 0; }
+  .card + .card { margin-top: 22px; }
+  .card .sub2 { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row2 .field { margin-bottom: 12px; }
+  .tiers { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 13px; margin-top: 4px; }
+  .tiers td { padding: 8px 10px; border: 0; background: var(--field); text-align: left; }
+  .tiers td:first-child { border-radius: 10px 0 0 10px; }
+  .tiers td:last-child { border-radius: 0 10px 10px 0; text-align: right; font-weight: 700; }
+  .tiers tr.reached td { background: var(--sp-50); color: var(--sp-900); }
+  .tiers tr.reached td:last-child { color: var(--sp-500); }
+  .tiers tr.na td { opacity: .4; }
+  .tiers .n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    font-size: 11px; font-weight: 800; margin-right: 6px; border: 1.5px solid var(--line); }
+  .tiers tr.reached .n { background: var(--sp-500); color: #fff; border-color: var(--sp-500); }
+  .chartbox.sm { height: 300px; }
 </style>
 </head>
 <body>
 <main>
   <div class="brand reveal"><img class="lg-speakli" src="speakli-logo.jpg" alt="Speakli"><span class="x">×</span><img class="lg-emeis" src="emeis-logo.png" alt="emeis"></div>
-  <p class="eyebrow reveal" style="animation-delay:.05s">Simulateur</p>
-  <h1 id="title" data-text="Votre flotte de téléphones,|année après année"></h1>
-  <p class="sub reveal" style="animation-delay:.35s">Renseignez vos hypothèses : la simulation se met à jour en direct et s'exporte en fichier Excel.</p>
+  <p class="eyebrow reveal" style="animation-delay:.05s">Simulateur de déploiement</p>
+  <h1 id="title" data-text="Déployer Speakli chez emeis,|année après année"></h1>
+  <p class="sub reveal" style="animation-delay:.35s">Matériel et abonnement Speakli suivent le même plan de déploiement. Tous les montants sont hors taxe.</p>
 
   <div class="grid">
     <form class="card reveal" style="animation-delay:.45s" onsubmit="return false">
-      <p class="section-title">Hypothèses</p>
-      <div class="field" data-id="etab" data-label="Nombre d'établissements" data-value="10"></div>
+      <p class="section-title">1 · Périmètre</p>
+      <div class="field">
+        <span class="lbl">Parc à équiper</span>
+        <div class="seg" id="segView" role="radiogroup">
+          <button type="button" data-view="france" aria-pressed="true" role="radio">
+            <span class="num">FR</span>
+            <span><b>emeis France</b>229 établissements · jusqu'à 20 000 lits</span>
+          </button>
+          <button type="button" data-view="groupe" aria-pressed="false" role="radio">
+            <span class="num">GR</span>
+            <span><b>emeis Groupe</b>815 établissements · jusqu'à 90 000 lits</span>
+          </button>
+        </div>
+      </div>
+      <div class="field" data-id="cible" data-label="Établissements à équiper" data-sub="par défaut, tout le parc" data-value="229" data-max="229" data-min="1" data-step="1"></div>
+      <div class="field" data-id="litsMoy" data-label="Lits par établissement" data-sub="moyenne" data-value="87" data-min="1" data-unit="lits"></div>
+      <div class="hint" id="litsHint" style="margin:-10px 0 16px"></div>
 
+      <div class="divider"></div>
+      <p class="section-title">2 · Plan de déploiement</p>
+      <div class="field" data-id="deja" data-label="Établissements déjà équipés fin 2026" data-sub="matériel et mise en place déjà faits" data-value="2"></div>
+      <div class="field" data-id="objJuin" data-label="Établissements équipés fin juin 2027" data-sub="déploiement progressif de janvier à juin" data-value="19"></div>
+      <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois"></div>
+      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027" data-value="10" data-unit="ans" data-min="1" data-max="20"></div>
+      <div class="hint" id="planHint" style="margin:-10px 0 16px"></div>
+
+      <div class="divider"></div>
+      <p class="section-title">3 · Matériel par établissement</p>
       <div class="field">
         <span class="lbl">Volume de téléphones par établissement<small>Choisissez comment le calculer :</small></span>
-        <div class="seg" id="seg" data-mode="telephones" role="radiogroup">
+        <div class="seg" id="seg" role="radiogroup">
           <button type="button" data-mode="telephones" aria-pressed="true" role="radio">
             <span class="num">1</span>
             <span><b>Nombre moyen de téléphones</b>Je saisis directement le nombre moyen de téléphones par établissement.</span>
@@ -171,41 +219,56 @@
           <div class="total-staff"><span>= téléphones par établissement</span><b id="staffTotal">20</b></div>
         </div></div>
       </div>
-
       <div class="field" data-id="bornes" data-label="Bornes de charge par établissement" data-sub="moyenne" data-value="2"></div>
       <div class="field" data-id="chargeurs" data-label="Chargeurs individuels par établissement" data-sub="moyenne" data-value="2"></div>
       <div class="field" data-id="pct" data-label="Renouvellement annuel (maintenance)" data-sub="part de la flotte remplacée chaque année" data-value="10" data-unit="%" data-max="100"></div>
-      <div class="field" data-id="cycle" data-label="Renouvellement complet tous les" data-value="5" data-unit="ans" data-min="1"></div>
-      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-value="15" data-unit="ans" data-min="1" data-max="30"></div>
+      <div class="field" data-id="cycle" data-label="Renouvellement complet tous les" data-sub="compté à partir de l'équipement de chaque établissement" data-value="5" data-unit="ans" data-min="1"></div>
 
       <div class="divider"></div>
-      <p class="section-title">Prix unitaires</p>
+      <p class="section-title">4 · Prix du matériel</p>
       <div class="field" data-id="pTel" data-label="Téléphone" data-value="141.67" data-unit="€ HT" data-step="1"></div>
       <div class="field" data-id="pBorne" data-label="Borne de charge" data-value="45" data-unit="€ HT" data-step="5"></div>
       <div class="field" data-id="pChargeur" data-label="Chargeur individuel" data-value="15" data-unit="€ HT"></div>
       <div class="hint warn" id="chHint" style="margin:-10px 0 16px"></div>
+
+      <div class="divider"></div>
+      <p class="section-title">5 · Prix Speakli</p>
+      <div class="field" data-id="pFormation" data-label="Formation" data-sub="par nouvel établissement, payée une fois" data-value="1590" data-unit="€ HT" data-step="10"></div>
+      <div class="field" data-id="pParam" data-label="Paramétrage" data-sub="par nouvel établissement, payé une fois" data-value="995" data-unit="€ HT" data-step="5"></div>
+      <span class="lbl" style="display:block;font-size:13px;font-weight:600;margin-top:4px">Abonnement, par lit et par mois<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">Tout le parc est facturé au prix du palier atteint. Contrats annuels : un palier franchi s'applique au 1er janvier suivant.</small></span>
+      <table class="tiers" id="tiers"></table>
     </form>
 
     <section>
-      <div class="kpis">
-        <div class="kpi reveal" style="animation-delay:.55s"><div class="v" id="kFlotte">0</div><div class="l">téléphones dans la flotte</div></div>
-        <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHT">0 €</div><div class="l" id="kHTl">coût total HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.75s"><div class="v" id="kAn">0 €</div><div class="l">coût moyen par an HT</div></div>
+      <div class="reshead reveal" style="animation-delay:.5s">
+        <h2 id="resTitle">Résultats sur 10 ans</h2>
+        <button type="button" class="btn" id="export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+          Télécharger le fichier Excel
+        </button>
       </div>
-      <div class="card reveal" style="animation-delay:.85s">
-        <div class="cardhead">
-          <p class="section-title">Montant payé chaque année (€ HT)</p>
-          <button type="button" class="btn" id="export">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
-            Télécharger le fichier Excel
-          </button>
-        </div>
-        <div class="chartbox"><canvas id="chart" role="img" aria-label="Histogramme du coût HT par année, réparti entre téléphones, bornes et chargeurs"></canvas></div>
+      <div class="kpis">
+        <div class="kpi total reveal" style="animation-delay:.55s"><div class="v" id="kTotal">0 €</div><div class="l">investissement total HT</div></div>
+        <div class="kpi reveal" style="animation-delay:.6s"><div class="v" id="kParc">0</div><div class="l" id="kParcL">établissements équipés</div></div>
+        <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHw">0 €</div><div class="l">dont matériel HT</div></div>
+        <div class="kpi reveal" style="animation-delay:.7s"><div class="v" id="kSp">0 €</div><div class="l">dont Speakli HT (mise en place + abonnement)</div></div>
+      </div>
+
+      <div class="card reveal" style="animation-delay:.8s">
+        <p class="section-title">Investissement matériel par année (€ HT)</p>
+        <p class="sub2">Équipement des nouveaux établissements, maintenance et renouvellements complets.</p>
+        <div class="chartbox sm"><canvas id="chartHw" role="img" aria-label="Histogramme du coût matériel HT par année"></canvas></div>
+      </div>
+
+      <div class="card reveal" style="animation-delay:.9s">
+        <p class="section-title">Investissement Speakli par année (€ HT)</p>
+        <p class="sub2">Formation et paramétrage des nouveaux établissements, puis abonnement par lit.</p>
+        <div class="chartbox sm"><canvas id="chartSp" role="img" aria-label="Histogramme du coût Speakli HT par année"></canvas></div>
         <details>
           <summary>Voir le détail année par année</summary>
           <div class="tablewrap"><table id="t"></table></div>
         </details>
-        <p class="note">Année 1 : achat de toute la flotte. Les années suivantes, on remplace le % de maintenance (arrondi à l'unité supérieure). Toute la flotte est renouvelée à chaque fin de cycle (années en orange dans le tableau). Les mêmes règles s'appliquent aux téléphones, aux bornes et aux chargeurs.</p>
+        <p class="note">Matériel : chaque établissement est équipé le mois de son déploiement ; ensuite, le % de maintenance est remplacé chaque année (arrondi au-dessus) et toute sa flotte est renouvelée à chaque fin de cycle. Les établissements déjà équipés fin 2026 n'ont ni matériel ni mise en place à payer, seulement l'abonnement.</p>
       </div>
     </section>
   </div>
@@ -216,10 +279,29 @@ const $ = id => document.getElementById(id);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fmtN = n => Math.round(n).toLocaleString('fr-FR');
 const fmtE = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const SERIES = [
+const fmtE2 = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+const fmtMonth = m => new Date(START, m - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+const START = 2027;
+const VIEWS = {
+  france: { label: 'emeis France', etab: 229, litsMax: 20000 },
+  groupe: { label: 'emeis Groupe', etab: 815, litsMax: 90000 },
+};
+const TIERS = [
+  { label: '0 – 20 000 lits', upTo: 20000, price: 7.25 },
+  { label: '20 001 – 40 000 lits', upTo: 40000, price: 7.00 },
+  { label: '40 001 – 70 000 lits', upTo: 70000, price: 6.75 },
+  { label: '70 001 lits et plus', upTo: Infinity, price: 6.60 },
+];
+const tierOf = lits => TIERS.findIndex(t => lits <= t.upTo);
+const HW_SERIES = [
   { key: 'cTel', label: 'Téléphones', color: '#007aff' },
   { key: 'cBornes', label: 'Bornes de charge', color: '#f07d00' },
   { key: 'cChargeurs', label: 'Chargeurs individuels', color: '#8b5cf6' },
+];
+const SP_SERIES = [
+  { key: 'abo', label: 'Abonnement', color: '#007aff' },
+  { key: 'setup', label: 'Mise en place (formation + paramétrage)', color: '#f07d00' },
 ];
 
 // Titre : mots qui apparaissent un par un, la 2e ligne en bleu.
@@ -240,11 +322,11 @@ document.querySelectorAll('.field[data-id]').forEach(f => {
       <button type="button" data-dir="1" aria-label="Augmenter">+</button>
     </div>`;
   const input = f.querySelector('input'), box = f.querySelector('.stepper');
-  // Avec une unité, le champ prend la largeur de sa valeur pour que « 10 % » reste centré.
   const fit = () => { if (unit) input.style.width = Math.max(2, String(input.value).length + 0.6) + 'ch'; };
   fit(); input.addEventListener('input', fit);
-  const step = parseFloat(d.step || 1), min = parseFloat(d.min || 0), max = d.max ? parseFloat(d.max) : Infinity;
+  const step = parseFloat(d.step || 1), min = parseFloat(d.min || 0);
   const nudge = dir => {
+    const max = input.max ? parseFloat(input.max) : Infinity;
     const cur = parseFloat(input.value) || 0;
     const next = Math.min(max, Math.max(min, Math.round((cur + dir * step) / step) * step));
     input.value = +next.toFixed(2); fit();
@@ -263,15 +345,25 @@ document.querySelectorAll('.field[data-id]').forEach(f => {
   });
 });
 
-// Mode « je connais le nombre » / « je compte les soignants ».
-let mode = 'telephones';
-const STAFF = [['as', 'AS (aides-soignants)'], ['ide', 'IDE (infirmiers)'], ['para', 'Autres paramédicaux internes'], ['idec', 'IDEC']];
 const num = id => Math.max(0, parseFloat($(id).value) || 0);
+const STAFF = [['as', 'AS (aides-soignants)'], ['ide', 'IDE (infirmiers)'], ['para', 'Autres paramédicaux internes'], ['idec', 'IDEC']];
 const staffTotal = () => STAFF.reduce((a, [id]) => a + Math.round(num(id)), 0);
+
+function selectIn(group, btn) {
+  group.querySelectorAll('button').forEach(x => { x.setAttribute('aria-pressed', x === btn); x.setAttribute('aria-checked', x === btn); });
+}
+
+// Vue emeis France / emeis Groupe : fixe la taille du parc et le plafond de lits.
+let view = 'france';
+$('segView').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  view = b.dataset.view; selectIn($('segView'), b);
+  const c = $('cible'); c.max = VIEWS[view].etab; c.value = VIEWS[view].etab; c.dispatchEvent(new Event('input'));
+}));
+
+// Volume de téléphones : nombre moyen ou comptage des soignants.
+let mode = 'telephones';
 $('seg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
-  mode = b.dataset.mode;
-  $('seg').dataset.mode = mode;
-  $('seg').querySelectorAll('button').forEach(x => { x.setAttribute('aria-pressed', x === b); x.setAttribute('aria-checked', x === b); });
+  mode = b.dataset.mode; selectIn($('seg'), b);
   $('panelTel').classList.toggle('open', mode === 'telephones');
   $('panelSoignants').classList.toggle('open', mode === 'soignants');
   if (mode === 'telephones') { $('tel').value = staffTotal(); $('tel').dispatchEvent(new Event('input')); }
@@ -293,42 +385,85 @@ function tween(el, to, fmt) {
 }
 
 function inputs() {
+  const v = VIEWS[view];
   return {
+    view, viewLabel: v.label, parc: v.etab, litsMax: v.litsMax,
+    cible: Math.min(v.etab, Math.max(1, Math.round(num('cible')))),
+    litsMoy: num('litsMoy'),
+    deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
+    horizon: Math.min(20, Math.max(1, Math.round(num('horizon')))),
     mode, staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
-    etab: Math.round(num('etab')), tel: mode === 'soignants' ? staffTotal() : num('tel'),
-    bornes: num('bornes'), chargeurs: num('chargeurs'),
+    tel: mode === 'soignants' ? staffTotal() : num('tel'), bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
-    horizon: Math.min(30, Math.max(1, Math.round(num('horizon')))),
     pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
+    pFormation: num('pFormation'), pParam: num('pParam'),
   };
 }
 
+/* Plan de déploiement, au mois près.
+   m = 0 : fin 2026 ; m = 1 : janvier 2027 ; ... Les établissements équipés un mois paient l'abonnement dès ce mois.
+   Prix de l'abonnement d'une année = palier atteint par les lits déployés au 1er janvier (contrats annuels). */
 function simulate(i) {
-  const fleet = { tel: Math.round(i.etab * i.tel), bornes: Math.round(i.etab * i.bornes), chargeurs: Math.round(i.etab * i.chargeurs) };
+  const months = i.horizon * 12;
+  const actifs = [];
+  for (let m = 0; m <= months; m++) {
+    let n;
+    if (m === 0) n = i.deja;
+    else if (m <= 6) n = i.deja + Math.round((i.objJuin - i.deja) * m / 6);
+    else n = i.objJuin + i.rythme * (m - 6);
+    actifs.push(Math.min(i.cible, Math.max(m ? actifs[m - 1] : 0, n)));
+  }
+  const lits = m => Math.min(actifs[m] * i.litsMoy, i.litsMax);
+
+  const monthly = [];
+  for (let m = 1; m <= months; m++) {
+    const y = START + Math.floor((m - 1) / 12);
+    const tier = tierOf(lits((y - START) * 12));
+    const nouveaux = actifs[m] - actifs[m - 1];
+    monthly.push({ m, y, label: fmtMonth(m), actifs: actifs[m], nouveaux, lits: lits(m), tier, price: TIERS[tier].price,
+      abo: lits(m) * TIERS[tier].price, formation: nouveaux * i.pFormation, param: nouveaux * i.pParam });
+  }
+
+  // Matériel par cohorte (année d'équipement). La cohorte 2026 est déjà équipée : pas d'achat initial.
+  const cohort = { [START - 1]: actifs[0] };
+  const kit = { tel: i.tel, bornes: i.bornes, chargeurs: i.chargeurs };
+  const price = { tel: i.pTel, bornes: i.pBorne, chargeurs: i.pChargeur };
   const rows = []; let cumul = 0;
-  for (let y = 1; y <= i.horizon; y++) {
-    const full = (y - 1) % i.cycle === 0;
-    const q = k => full ? fleet[k] : Math.ceil(fleet[k] * i.pct - 1e-9);
-    const r = { y, type: full ? (y === 1 ? 'Achat initial' : 'Renouvellement complet') : 'Maintenance', full,
-      tel: q('tel'), bornes: q('bornes'), chargeurs: q('chargeurs') };
-    r.cTel = r.tel * i.pTel; r.cBornes = r.bornes * i.pBorne; r.cChargeurs = r.chargeurs * i.pChargeur;
-    r.total = r.cTel + r.cBornes + r.cChargeurs;
-    cumul += r.total; r.cumul = cumul;
+  for (let k = 0; k < i.horizon; k++) {
+    const y = START + k, ms = monthly.filter(x => x.y === y);
+    cohort[y] = ms.reduce((a, x) => a + x.nouveaux, 0);
+    let renew = 0, maintBase = 0;
+    for (let c = START - 1; c < y; c++) {
+      if ((y - c) % i.cycle === 0) renew += cohort[c]; else maintBase += cohort[c];
+    }
+    const r = { y, nouveaux: cohort[y], actifsFin: ms[ms.length - 1].actifs, litsFin: ms[ms.length - 1].lits,
+      tier: ms[0].tier, price: ms[0].price };
+    for (const t of ['tel', 'bornes', 'chargeurs']) {
+      const inst = Math.round(cohort[y] * kit[t]), ren = Math.round(renew * kit[t]);
+      const maint = Math.ceil(Math.round(maintBase * kit[t]) * i.pct - 1e-9);
+      r[t] = { inst, ren, maint, qty: inst + ren + maint };
+    }
+    r.cTel = r.tel.qty * price.tel; r.cBornes = r.bornes.qty * price.bornes; r.cChargeurs = r.chargeurs.qty * price.chargeurs;
+    r.hw = r.cTel + r.cBornes + r.cChargeurs;
+    r.formation = ms.reduce((a, x) => a + x.formation, 0);
+    r.param = ms.reduce((a, x) => a + x.param, 0);
+    r.setup = r.formation + r.param;
+    r.abo = ms.reduce((a, x) => a + x.abo, 0);
+    r.sp = r.setup + r.abo;
+    r.total = r.hw + r.sp; cumul += r.total; r.cumul = cumul;
     rows.push(r);
   }
-  return { fleet, rows };
+  const done = actifs.findIndex(n => n >= i.cible);
+  return { rows, monthly, doneMonth: done > 0 ? done : null };
 }
 
-function chartConfig(i, rows, forExport) {
+function chartConfig(series, rows, title, forExport) {
   const font = { family: 'Geist' };
   return {
     type: 'bar',
     data: {
       labels: rows.map(r => String(r.y)),
-      datasets: SERIES.map(s => ({
-        label: s.label, backgroundColor: s.color, borderWidth: 0, maxBarThickness: 48,
-        data: rows.map(r => r[s.key]),
-      })),
+      datasets: series.map(s => ({ label: s.label, backgroundColor: s.color, borderWidth: 0, maxBarThickness: 52, data: rows.map(r => r[s.key]) })),
     },
     options: {
       responsive: !forExport, maintainAspectRatio: false,
@@ -337,19 +472,19 @@ function chartConfig(i, rows, forExport) {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { position: 'top', align: 'start', labels: { boxWidth: 12, boxHeight: 12, color: '#1a2e49', font: { ...font, size: 13 } } },
-        title: forExport ? { display: true, text: 'Montant payé chaque année (€ HT)', color: '#1a2e49', font: { size: 16, weight: '600' }, align: 'start' } : { display: false },
+        title: forExport ? { display: true, text: title, color: '#1a2e49', font: { size: 16, weight: '600' }, align: 'start' } : { display: false },
         tooltip: {
           backgroundColor: '#1a2e49', padding: 12, cornerRadius: 10,
           titleFont: { ...font, weight: '700' }, bodyFont: font, footerFont: font,
           callbacks: {
-            title: items => { const r = rows[items[0].dataIndex]; return `Année ${r.y} · ${r.type}`; },
+            title: items => String(rows[items[0].dataIndex].y),
             label: c => ` ${c.dataset.label} : ${fmtE(c.raw)} HT`,
-            footer: items => { const r = rows[items[0].dataIndex]; return `Total : ${fmtE(r.total)} HT`; },
+            footer: items => `Total : ${fmtE(items.reduce((a, it) => a + it.raw, 0))} HT`,
           },
         },
       },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, font }, title: { display: true, text: 'Année', color: '#6b7280', font } },
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, font } },
         y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,40,120,0.07)' }, border: { display: false },
           ticks: { color: '#6b7280', callback: v => fmtE(v), font } },
       },
@@ -357,44 +492,63 @@ function chartConfig(i, rows, forExport) {
   };
 }
 
-let chart;
-function render() {
-  const i = inputs(), { fleet, rows } = simulate(i);
-  const sum = k => rows.reduce((a, r) => a + r[k], 0);
-  $('staffTotal').textContent = staffTotal();
-  $('chHint').textContent = fleet.chargeurs ? '' : 'Aucun chargeur prévu : renseignez le nombre de chargeurs par établissement plus haut.';
-  tween($('kFlotte'), fleet.tel, fmtN);
-  tween($('kHT'), sum('total'), fmtE);
-  tween($('kAn'), sum('total') / i.horizon, fmtE);
-  $('kHTl').textContent = `coût total HT sur ${i.horizon} ans`;
+const charts = {};
+function drawChart(id, series, rows) {
+  const cfg = chartConfig(series, rows, '', false), ch = charts[id];
+  if (!ch) { charts[id] = new Chart($(id), cfg); return; }
+  ch.data.labels = cfg.data.labels;
+  cfg.data.datasets.forEach((d, k) => { ch.data.datasets[k].data = d.data; });
+  ch.options.plugins.tooltip.callbacks = cfg.options.plugins.tooltip.callbacks;
+  ch.update();
+}
 
-  // Mise à jour en place (et non recréation) pour que les barres glissent vers leur nouvelle hauteur.
-  const cfg = chartConfig(i, rows, false);
-  if (!chart) chart = new Chart($('chart'), cfg);
-  else {
-    chart.data.labels = cfg.data.labels;
-    cfg.data.datasets.forEach((d, k) => { chart.data.datasets[k].data = d.data; });
-    chart.options.plugins.tooltip.callbacks = cfg.options.plugins.tooltip.callbacks;
-    chart.update();
-  }
+function render() {
+  const i = inputs(), { rows, doneMonth } = simulate(i);
+  const sum = k => rows.reduce((a, r) => a + r[k], 0);
+  const last = rows[rows.length - 1];
+
+  $('staffTotal').textContent = staffTotal();
+  const litsParc = i.cible * i.litsMoy;
+  $('litsHint').innerHTML = `= <b>${fmtN(Math.min(litsParc, i.litsMax))} lits</b> une fois le parc équipé` +
+    (litsParc > i.litsMax ? ` (plafonné à ${fmtN(i.litsMax)} lits pour ${i.viewLabel})` : ` (plafond ${i.viewLabel} : ${fmtN(i.litsMax)} lits)`);
+  $('planHint').innerHTML = doneMonth
+    ? `Les ${fmtN(i.cible)} établissements sont équipés en <b>${fmtMonth(doneMonth)}</b>.`
+    : `À ce rythme, <b>${fmtN(last.actifsFin)} établissements sur ${fmtN(i.cible)}</b> sont équipés fin ${last.y}.`;
+  $('chHint').textContent = i.chargeurs ? '' : 'Aucun chargeur prévu : renseignez le nombre de chargeurs par établissement plus haut.';
+
+  const reached = new Set(rows.map(r => r.tier));
+  $('tiers').innerHTML = TIERS.map((t, k) => {
+    const na = i.view === 'france' && k > 0;
+    return `<tr class="${reached.has(k) ? 'reached' : ''}${na ? ' na' : ''}"><td><span class="n">${k + 1}</span>${t.label}</td><td>${fmtE2(t.price)}</td></tr>`;
+  }).join('');
+
+  $('resTitle').textContent = `Résultats sur ${i.horizon} ans · ${i.viewLabel}`;
+  tween($('kTotal'), sum('total'), fmtE);
+  tween($('kParc'), last.actifsFin, fmtN);
+  $('kParcL').innerHTML = `établissements équipés fin ${last.y} · <b>${fmtN(last.litsFin)} lits</b>`;
+  tween($('kHw'), sum('hw'), fmtE);
+  tween($('kSp'), sum('sp'), fmtE);
+
+  drawChart('chartHw', HW_SERIES, rows);
+  drawChart('chartSp', SP_SERIES, rows);
 
   $('t').innerHTML =
-    '<thead><tr><th>Année</th><th>Type</th><th>Téléphones</th><th>Bornes</th><th>Chargeurs</th><th>Coût HT</th><th>Cumul HT</th></tr></thead><tbody>' +
-    rows.map(r => `<tr class="${r.full ? 'full' : ''}"><td>${r.y}</td><td>${r.type}</td><td>${fmtN(r.tel)}</td><td>${fmtN(r.bornes)}</td><td>${fmtN(r.chargeurs)}</td><td>${fmtE(r.total)}</td><td>${fmtE(r.cumul)}</td></tr>`).join('') +
-    `</tbody><tfoot><tr><td>Total</td><td></td><td>${fmtN(sum('tel'))}</td><td>${fmtN(sum('bornes'))}</td><td>${fmtN(sum('chargeurs'))}</td><td>${fmtE(sum('total'))}</td><td></td></tr></tfoot>`;
+    '<thead><tr><th>Année</th><th>Palier</th><th>Établ. fin d\'année</th><th>Lits</th><th>Prix / lit / mois</th><th>Matériel</th><th>Mise en place</th><th>Abonnement</th><th>Total</th><th>Cumul</th></tr></thead><tbody>' +
+    rows.map(r => `<tr><td>${r.y}</td><td>${r.tier + 1}</td><td>${fmtN(r.actifsFin)}</td><td>${fmtN(r.litsFin)}</td><td>${fmtE2(r.price)}</td><td>${fmtE(r.hw)}</td><td>${fmtE(r.setup)}</td><td>${fmtE(r.abo)}</td><td>${fmtE(r.total)}</td><td>${fmtE(r.cumul)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td><td>${fmtE(sum('hw'))}</td><td>${fmtE(sum('setup'))}</td><td>${fmtE(sum('abo'))}</td><td>${fmtE(sum('total'))}</td><td></td></tr></tfoot>`;
 }
 
 document.querySelectorAll('form input').forEach(el => el.addEventListener('input', render));
 // Laisse les blocs apparaître avant que les chiffres et les barres ne montent.
 setTimeout(render, reduceMotion ? 0 : 650);
 
-// Rend le graphique hors écran à taille fixe pour l'insérer en image dans l'Excel.
-function chartPng(i, rows) {
+// Rend un graphique hors écran à taille fixe pour l'insérer en image dans l'Excel.
+function chartPng(series, rows, title) {
   const holder = document.createElement('div');
-  holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:1000px;height:460px';
-  const cv = document.createElement('canvas'); cv.width = 1000; cv.height = 460; holder.appendChild(cv);
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:1000px;height:440px';
+  const cv = document.createElement('canvas'); cv.width = 1000; cv.height = 440; holder.appendChild(cv);
   document.body.appendChild(holder);
-  const cfg = chartConfig(i, rows, true);
+  const cfg = chartConfig(series, rows, title, true);
   cfg.plugins = [{ id: 'bg', beforeDraw: c => { c.ctx.save(); c.ctx.fillStyle = '#fff'; c.ctx.fillRect(0, 0, c.width, c.height); c.ctx.restore(); } }];
   const c = new Chart(cv, cfg);
   const url = c.toBase64Image('image/png');
@@ -403,92 +557,133 @@ function chartPng(i, rows) {
 }
 
 $('export').addEventListener('click', async () => {
-  const i = inputs(), { fleet, rows } = simulate(i);
+  const i = inputs(), { rows, monthly } = simulate(i);
   const wb = new ExcelJS.Workbook();
-  const H = "'Hypothèses'!";
-  const blue = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEAF3FF' } };
   const head = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF007AFF' } };
   const white = { bold: true, color: { argb: 'FFFFFFFF' } };
   const grey = { italic: true, color: { argb: 'FF6B7280' } };
-  const eur = '#,##0 "€"', eur2 = '#,##0.00 "€"';
+  const eur = '#,##0 "€"', eur2 = '#,##0.00 "€"', int = '#,##0';
 
-  const h = wb.addWorksheet('Hypothèses');
-  h.columns = [{ width: 50 }, { width: 16 }, { width: 62 }];
-  h.getCell('A1').value = 'Hypothèses de la simulation'; h.getCell('A1').font = { bold: true, size: 14 };
-  h.getCell('C1').value = 'Les cellules bleues sont modifiables : les chiffres se recalculent.'; h.getCell('C1').font = grey;
-  const editable = (r, l, v, f) => { h.getCell(`A${r}`).value = l; const c = h.getCell(`B${r}`); c.value = v; c.numFmt = f; c.fill = blue; c.font = { bold: true }; };
-  editable(3, "Nombre d'établissements", i.etab, '0');
-  if (i.mode === 'soignants') {
-    h.getCell('A4').value = 'Téléphones par établissement';
-    h.getCell('B4').value = { formula: 'SUM(B23:B26)', result: i.tel }; h.getCell('B4').numFmt = '0';
-    h.getCell('C4').value = 'nombre max de soignants présents en même temps (détail plus bas)'; h.getCell('C4').font = grey;
-  } else {
-    editable(4, 'Téléphones par établissement (moyenne)', i.tel, '0.0');
-    h.getCell('C4').value = "= nombre max de soignants présents en même temps (AS, IDE, paramédicaux internes, IDEC)"; h.getCell('C4').font = grey;
+  // Écrit un tableau (en-tête bleu + lignes + ligne Total en formules SUM) et renvoie la dernière ligne utilisée.
+  function table(ws, top, cols, data, totals) {
+    ws.columns = cols.map(c => ({ width: c.w || 14 }));
+    const hr = ws.getRow(top);
+    cols.forEach((c, k) => { const cell = hr.getCell(k + 1); cell.value = c.h; cell.fill = head; cell.font = white; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }; });
+    hr.height = 32;
+    data.forEach((d, n) => {
+      const row = ws.getRow(top + 1 + n);
+      cols.forEach((c, k) => { const cell = row.getCell(k + 1); cell.value = c.v(d); if (c.f) cell.numFmt = c.f; });
+    });
+    const first = top + 1, lastR = top + data.length;
+    if (totals) {
+      const tr = ws.getRow(lastR + 1); tr.getCell(1).value = 'Total'; tr.font = { bold: true };
+      cols.forEach((c, k) => {
+        const cell = tr.getCell(k + 1); cell.border = { top: { style: 'medium' } };
+        if (c.sum) { const L = ws.getColumn(k + 1).letter; cell.value = { formula: `SUM(${L}${first}:${L}${lastR})`, result: data.reduce((a, d) => a + c.v(d), 0) }; cell.numFmt = c.f; }
+      });
+      return lastR + 1;
+    }
+    return lastR;
   }
-  editable(5, 'Bornes de charge par établissement (moyenne)', i.bornes, '0.0');
-  editable(6, 'Chargeurs individuels par établissement (moyenne)', i.chargeurs, '0.0');
-  editable(7, 'Renouvellement annuel (maintenance)', i.pct, '0%');
-  editable(8, 'Renouvellement complet tous les (années)', i.cycle, '0');
-  editable(10, 'Prix unitaire téléphone (€ HT)', i.pTel, eur2);
-  editable(11, 'Prix unitaire borne de charge (€ HT)', i.pBorne, eur2);
-  editable(12, 'Prix unitaire chargeur individuel (€ HT)', i.pChargeur, eur2);
-  h.getCell('A16').value = 'Flotte totale'; h.getCell('A16').font = { bold: true };
-  [[17, 'Téléphones', 'ROUND(B3*B4,0)', fleet.tel], [18, 'Bornes de charge', 'ROUND(B3*B5,0)', fleet.bornes],
-   [19, 'Chargeurs individuels', 'ROUND(B3*B6,0)', fleet.chargeurs]].forEach(([r, l, f, v]) => {
-    h.getCell(`A${r}`).value = l; h.getCell(`B${r}`).value = { formula: f, result: v }; h.getCell(`B${r}`).numFmt = '#,##0';
-  });
-  if (i.mode === 'soignants') {
-    h.getCell('A22').value = 'Soignants présents en même temps (max, par établissement)'; h.getCell('A22').font = { bold: true };
-    i.staff.forEach((st, k) => editable(23 + k, st.label, st.n, '0'));
-  }
+  const titleCell = (ws, text, sub) => {
+    ws.getCell('A1').value = text; ws.getCell('A1').font = { bold: true, size: 14 };
+    ws.getCell('A2').value = sub; ws.getCell('A2').font = grey;
+  };
+  const subtitle = `${i.viewLabel} · ${START} à ${START + i.horizon - 1} · montants HT`;
 
-  const s = wb.addWorksheet('Simulation');
-  s.columns = [10, 24, 12, 12, 12, 17, 17, 17, 16, 16].map(width => ({ width }));
-  s.getCell('A1').value = 'Simulation année par année'; s.getCell('A1').font = { bold: true, size: 14 };
-  const hdr = ['Année', 'Type', 'Téléphones', 'Bornes', 'Chargeurs', 'Coût téléphones HT', 'Coût bornes HT', 'Coût chargeurs HT', 'Total HT', 'Cumul HT'];
-  const hr = s.getRow(3);
-  hdr.forEach((t, k) => { const c = hr.getCell(k + 1); c.value = t; c.fill = head; c.font = white; c.alignment = { horizontal: 'center', wrapText: true }; });
-  const first = 4;
-  rows.forEach((r, k) => {
-    const n = first + k, isFull = `MOD(A${n}-1,${H}$B$8)=0`;
-    const qty = col => ({ formula: `IF(${isFull},${H}$B$${col},ROUNDUP(${H}$B$${col}*${H}$B$7,0))` });
-    const row = s.getRow(n);
-    row.getCell(1).value = r.y;
-    row.getCell(2).value = { formula: `IF(${isFull},IF(A${n}=1,"Achat initial","Renouvellement complet"),"Maintenance")`, result: r.type };
-    row.getCell(3).value = { ...qty(17), result: r.tel };
-    row.getCell(4).value = { ...qty(18), result: r.bornes };
-    row.getCell(5).value = { ...qty(19), result: r.chargeurs };
-    row.getCell(6).value = { formula: `C${n}*${H}$B$10`, result: r.cTel };
-    row.getCell(7).value = { formula: `D${n}*${H}$B$11`, result: r.cBornes };
-    row.getCell(8).value = { formula: `E${n}*${H}$B$12`, result: r.cChargeurs };
-    row.getCell(9).value = { formula: `SUM(F${n}:H${n})`, result: r.total };
-    row.getCell(10).value = { formula: k === 0 ? `I${n}` : `J${n - 1}+I${n}`, result: r.cumul };
-    for (let c = 3; c <= 5; c++) row.getCell(c).numFmt = '#,##0';
-    for (let c = 6; c <= 10; c++) row.getCell(c).numFmt = eur;
-  });
-  const last = first + rows.length - 1, tr = s.getRow(last + 1);
-  tr.getCell(1).value = 'Total';
-  const sum = k => rows.reduce((a, r) => a + r[k], 0);
-  [['C', 3, 'tel'], ['D', 4, 'bornes'], ['E', 5, 'chargeurs'], ['F', 6, 'cTel'], ['G', 7, 'cBornes'], ['H', 8, 'cChargeurs'], ['I', 9, 'total']]
-    .forEach(([L, c, k]) => { tr.getCell(c).value = { formula: `SUM(${L}${first}:${L}${last})`, result: sum(k) }; tr.getCell(c).numFmt = c >= 6 ? eur : '#,##0'; });
-  tr.font = { bold: true };
-  for (let c = 1; c <= 10; c++) tr.getCell(c).border = { top: { style: 'medium' } };
-  s.addConditionalFormatting({ ref: `A${first}:J${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFF1E3' } }, font: { bold: true } } }] });
-  s.views = [{ state: 'frozen', ySplit: 3 }];
-  s.getCell(`A${last + 3}`).value = "Année 1 : achat de toute la flotte. Années suivantes : remplacement du % de maintenance (arrondi à l'unité supérieure). Renouvellement complet à chaque fin de cycle (lignes en orange).";
-  s.getCell(`A${last + 3}`).font = grey;
+  // 1. Synthèse
+  const s = wb.addWorksheet('Synthèse');
+  titleCell(s, 'Déploiement Speakli chez emeis : synthèse', subtitle);
+  const endS = table(s, 4, [
+    { h: 'Année', v: r => r.y, w: 9 },
+    { h: 'Établissements équipés (fin d\'année)', v: r => r.actifsFin, f: int, w: 16 },
+    { h: 'Nouveaux établissements', v: r => r.nouveaux, f: int, sum: true, w: 14 },
+    { h: 'Lits (fin d\'année)', v: r => r.litsFin, f: int, w: 12 },
+    { h: 'Palier', v: r => r.tier + 1, w: 8 },
+    { h: 'Prix / lit / mois', v: r => r.price, f: eur2, w: 12 },
+    { h: 'Matériel', v: r => r.hw, f: eur, sum: true, w: 15 },
+    { h: 'Mise en place Speakli', v: r => r.setup, f: eur, sum: true, w: 15 },
+    { h: 'Abonnement Speakli', v: r => r.abo, f: eur, sum: true, w: 15 },
+    { h: 'Total', v: r => r.total, f: eur, sum: true, w: 15 },
+    { h: 'Cumul', v: r => r.cumul, f: eur, w: 15 },
+  ], rows, true);
+  s.views = [{ state: 'frozen', ySplit: 4 }];
+  const imgHw = wb.addImage({ base64: chartPng(HW_SERIES, rows, 'Investissement matériel par année (€ HT)'), extension: 'png' });
+  const imgSp = wb.addImage({ base64: chartPng(SP_SERIES, rows, 'Investissement Speakli par année (€ HT)'), extension: 'png' });
+  s.addImage(imgHw, { tl: { col: 0, row: endS + 1 }, ext: { width: 900, height: 396 } });
+  s.addImage(imgSp, { tl: { col: 0, row: endS + 22 }, ext: { width: 900, height: 396 } });
 
-  // Graphique : image figée aux hypothèses du site au moment de l'export.
-  const img = wb.addImage({ base64: chartPng(i, rows), extension: 'png' });
-  s.addImage(img, { tl: { col: 0, row: last + 4 }, ext: { width: 1000, height: 460 } });
-  s.getCell(`A${last + 4}`).value = "Graphique généré avec les hypothèses saisies sur le simulateur (il ne se met pas à jour si vous modifiez l'onglet Hypothèses).";
-  s.getCell(`A${last + 4}`).font = grey;
+  // 2. Matériel
+  const h = wb.addWorksheet('Matériel');
+  titleCell(h, 'Investissement matériel', 'Quantités achetées chaque année : nouveaux établissements + maintenance + renouvellements complets');
+  table(h, 4, [
+    { h: 'Année', v: r => r.y, w: 9 },
+    { h: 'Nouveaux établissements', v: r => r.nouveaux, f: int, sum: true, w: 14 },
+    { h: 'Téléphones (nouveaux étab.)', v: r => r.tel.inst, f: int, sum: true, w: 14 },
+    { h: 'Téléphones (maintenance)', v: r => r.tel.maint, f: int, sum: true, w: 14 },
+    { h: 'Téléphones (renouvellement)', v: r => r.tel.ren, f: int, sum: true, w: 15 },
+    { h: 'Bornes achetées', v: r => r.bornes.qty, f: int, sum: true, w: 12 },
+    { h: 'Chargeurs achetés', v: r => r.chargeurs.qty, f: int, sum: true, w: 12 },
+    { h: 'Coût téléphones', v: r => r.cTel, f: eur, sum: true, w: 15 },
+    { h: 'Coût bornes', v: r => r.cBornes, f: eur, sum: true, w: 13 },
+    { h: 'Coût chargeurs', v: r => r.cChargeurs, f: eur, sum: true, w: 13 },
+    { h: 'Total matériel', v: r => r.hw, f: eur, sum: true, w: 15 },
+  ], rows, true);
+  h.views = [{ state: 'frozen', ySplit: 4 }];
+
+  // 3. Speakli
+  const sp = wb.addWorksheet('Speakli');
+  titleCell(sp, 'Investissement Speakli', 'Mise en place payée une fois par nouvel établissement ; abonnement par lit et par mois au prix du palier atteint au 1er janvier');
+  table(sp, 4, [
+    { h: 'Année', v: r => r.y, w: 9 },
+    { h: 'Nouveaux établissements', v: r => r.nouveaux, f: int, sum: true, w: 14 },
+    { h: 'Formation', v: r => r.formation, f: eur, sum: true, w: 14 },
+    { h: 'Paramétrage', v: r => r.param, f: eur, sum: true, w: 14 },
+    { h: 'Lits (fin d\'année)', v: r => r.litsFin, f: int, w: 12 },
+    { h: 'Palier', v: r => r.tier + 1, w: 8 },
+    { h: 'Prix / lit / mois', v: r => r.price, f: eur2, w: 12 },
+    { h: 'Abonnement', v: r => r.abo, f: eur, sum: true, w: 15 },
+    { h: 'Total Speakli', v: r => r.sp, f: eur, sum: true, w: 15 },
+  ], rows, true);
+  sp.views = [{ state: 'frozen', ySplit: 4 }];
+
+  // 4. Plan mensuel
+  const pm = wb.addWorksheet('Plan mensuel');
+  titleCell(pm, 'Plan de déploiement mois par mois', subtitle);
+  table(pm, 4, [
+    { h: 'Mois', v: x => x.label, w: 16 },
+    { h: 'Nouveaux établissements', v: x => x.nouveaux, f: int, sum: true, w: 14 },
+    { h: 'Établissements équipés', v: x => x.actifs, f: int, w: 14 },
+    { h: 'Lits', v: x => x.lits, f: int, w: 12 },
+    { h: 'Prix / lit / mois', v: x => x.price, f: eur2, w: 12 },
+    { h: 'Abonnement du mois', v: x => x.abo, f: eur, sum: true, w: 15 },
+    { h: 'Mise en place du mois', v: x => x.formation + x.param, f: eur, sum: true, w: 15 },
+  ], monthly, true);
+  pm.views = [{ state: 'frozen', ySplit: 4 }];
+
+  // 5. Hypothèses
+  const hy = wb.addWorksheet('Hypothèses');
+  hy.columns = [{ width: 52 }, { width: 18 }];
+  titleCell(hy, 'Hypothèses de la simulation', 'Chiffres calculés par le simulateur en ligne : pour tester d\'autres hypothèses, utilisez le simulateur.');
+  const H = [
+    ['Périmètre', i.viewLabel], ['Établissements à équiper', i.cible], ['Lits par établissement (moyenne)', i.litsMoy],
+    ['Plafond de lits', i.litsMax], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements équipés fin juin 2027', i.objJuin],
+    ['Nouveaux établissements par mois à partir de juillet 2027', i.rythme], ['Durée de la simulation (années)', i.horizon],
+    ['Téléphones par établissement', i.tel],
+    ...(i.mode === 'soignants' ? i.staff.map(st => [`   dont ${st.label} (présents en même temps)`, st.n]) : []),
+    ['Bornes de charge par établissement', i.bornes], ['Chargeurs individuels par établissement', i.chargeurs],
+    ['Renouvellement annuel (maintenance)', `${Math.round(i.pct * 100)} %`], ['Renouvellement complet tous les (années)', i.cycle],
+    ['Prix téléphone (€ HT)', i.pTel], ['Prix borne de charge (€ HT)', i.pBorne], ['Prix chargeur individuel (€ HT)', i.pChargeur],
+    ['Formation par nouvel établissement (€ HT)', i.pFormation], ['Paramétrage par nouvel établissement (€ HT)', i.pParam],
+    ...TIERS.map((t, k) => [`Abonnement palier ${k + 1} (${t.label}), € HT / lit / mois`, t.price]),
+  ];
+  H.forEach(([l, v], k) => { hy.getCell(`A${4 + k}`).value = l; const c = hy.getCell(`B${4 + k}`); c.value = v; c.font = { bold: true }; });
+  wb.worksheets.forEach((ws, k) => { ws.orderNo = k; });
 
   const buf = await wb.xlsx.writeBuffer();
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-  a.download = `speakli-emeis-simulation-flotte-telephones-${i.horizon}ans.xlsx`;
+  a.download = `speakli-emeis-simulation-${i.view}-${i.horizon}ans.xlsx`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
 </script>
