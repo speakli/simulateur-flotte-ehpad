@@ -171,29 +171,27 @@
 
       <div class="divider"></div>
       <p class="section-title">Prix unitaires</p>
-      <div class="field" data-id="pTelTTC" data-label="Téléphone" data-value="170" data-unit="€ TTC" data-step="5"></div>
-      <div class="hint" id="telHT" style="margin:-10px 0 16px"></div>
+      <div class="field" data-id="pTel" data-label="Téléphone" data-value="141.67" data-unit="€ HT" data-step="1"></div>
       <div class="field" data-id="pBorne" data-label="Borne de charge" data-value="45" data-unit="€ HT" data-step="5"></div>
       <div class="field" data-id="pChargeur" data-label="Chargeur individuel" data-value="15" data-unit="€ HT"></div>
       <div class="hint warn" id="chHint" style="margin:-10px 0 16px"></div>
-      <div class="field" data-id="tva" data-label="TVA" data-value="20" data-unit="%" data-step="0.5"></div>
     </form>
 
     <section>
       <div class="kpis">
         <div class="kpi reveal" style="animation-delay:.55s"><div class="v" id="kFlotte">0</div><div class="l">téléphones dans la flotte</div></div>
         <div class="kpi reveal" style="animation-delay:.65s"><div class="v" id="kHT">0 €</div><div class="l" id="kHTl">coût total HT</div></div>
-        <div class="kpi reveal" style="animation-delay:.75s"><div class="v" id="kTTC">0 €</div><div class="l" id="kTTCl">coût total TTC</div></div>
+        <div class="kpi reveal" style="animation-delay:.75s"><div class="v" id="kAn">0 €</div><div class="l">coût moyen par an HT</div></div>
       </div>
       <div class="card reveal" style="animation-delay:.85s">
         <div class="cardhead">
-          <p class="section-title">Montant payé chaque année (€ TTC)</p>
+          <p class="section-title">Montant payé chaque année (€ HT)</p>
           <button type="button" class="btn" id="export">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
             Télécharger le fichier Excel
           </button>
         </div>
-        <div class="chartbox"><canvas id="chart" role="img" aria-label="Histogramme du coût TTC par année, réparti entre téléphones, bornes et chargeurs"></canvas></div>
+        <div class="chartbox"><canvas id="chart" role="img" aria-label="Histogramme du coût HT par année, réparti entre téléphones, bornes et chargeurs"></canvas></div>
         <details>
           <summary>Voir le détail année par année</summary>
           <div class="tablewrap"><table id="t"></table></div>
@@ -209,7 +207,6 @@ const $ = id => document.getElementById(id);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fmtN = n => Math.round(n).toLocaleString('fr-FR');
 const fmtE = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const fmtE2 = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 const SERIES = [
   { key: 'cTel', label: 'Téléphones', color: '#007aff' },
   { key: 'cBornes', label: 'Bornes de charge', color: '#f07d00' },
@@ -287,29 +284,27 @@ function tween(el, to, fmt) {
 }
 
 function inputs() {
-  const tva = num('tva') / 100, pTelTTC = num('pTelTTC');
   return {
     mode, staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
     etab: Math.round(num('etab')), tel: mode === 'soignants' ? staffTotal() : num('tel'),
     bornes: num('bornes'), chargeurs: num('chargeurs'),
     pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
     horizon: Math.min(30, Math.max(1, Math.round(num('horizon')))),
-    tva, pTelTTC, pTel: pTelTTC / (1 + tva), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
+    pTel: num('pTel'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
   };
 }
 
-// Tous les coûts sont calculés en HT ; le TTC = HT × (1 + TVA).
 function simulate(i) {
   const fleet = { tel: Math.round(i.etab * i.tel), bornes: Math.round(i.etab * i.bornes), chargeurs: Math.round(i.etab * i.chargeurs) };
-  const rows = []; let cumul = 0, cumulTTC = 0;
+  const rows = []; let cumul = 0;
   for (let y = 1; y <= i.horizon; y++) {
     const full = (y - 1) % i.cycle === 0;
     const q = k => full ? fleet[k] : Math.ceil(fleet[k] * i.pct - 1e-9);
     const r = { y, type: full ? (y === 1 ? 'Achat initial' : 'Renouvellement complet') : 'Maintenance', full,
       tel: q('tel'), bornes: q('bornes'), chargeurs: q('chargeurs') };
     r.cTel = r.tel * i.pTel; r.cBornes = r.bornes * i.pBorne; r.cChargeurs = r.chargeurs * i.pChargeur;
-    r.total = r.cTel + r.cBornes + r.cChargeurs; r.totalTTC = r.total * (1 + i.tva);
-    cumul += r.total; cumulTTC += r.totalTTC; r.cumul = cumul; r.cumulTTC = cumulTTC;
+    r.total = r.cTel + r.cBornes + r.cChargeurs;
+    cumul += r.total; r.cumul = cumul;
     rows.push(r);
   }
   return { fleet, rows };
@@ -323,7 +318,7 @@ function chartConfig(i, rows, forExport) {
       labels: rows.map(r => String(r.y)),
       datasets: SERIES.map(s => ({
         label: s.label, backgroundColor: s.color, borderWidth: 0, maxBarThickness: 48,
-        data: rows.map(r => r[s.key] * (1 + i.tva)),
+        data: rows.map(r => r[s.key]),
       })),
     },
     options: {
@@ -333,14 +328,14 @@ function chartConfig(i, rows, forExport) {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { position: 'top', align: 'start', labels: { boxWidth: 12, boxHeight: 12, color: '#1a2e49', font: { ...font, size: 13 } } },
-        title: forExport ? { display: true, text: 'Montant payé chaque année (€ TTC)', color: '#1a2e49', font: { size: 16, weight: '600' }, align: 'start' } : { display: false },
+        title: forExport ? { display: true, text: 'Montant payé chaque année (€ HT)', color: '#1a2e49', font: { size: 16, weight: '600' }, align: 'start' } : { display: false },
         tooltip: {
           backgroundColor: '#1a2e49', padding: 12, cornerRadius: 10,
           titleFont: { ...font, weight: '700' }, bodyFont: font, footerFont: font,
           callbacks: {
             title: items => { const r = rows[items[0].dataIndex]; return `Année ${r.y} · ${r.type}`; },
-            label: c => ` ${c.dataset.label} : ${fmtE(c.raw)} TTC`,
-            footer: items => { const r = rows[items[0].dataIndex]; return `Total : ${fmtE(r.totalTTC)} TTC (${fmtE(r.total)} HT)`; },
+            label: c => ` ${c.dataset.label} : ${fmtE(c.raw)} HT`,
+            footer: items => { const r = rows[items[0].dataIndex]; return `Total : ${fmtE(r.total)} HT`; },
           },
         },
       },
@@ -358,13 +353,11 @@ function render() {
   const i = inputs(), { fleet, rows } = simulate(i);
   const sum = k => rows.reduce((a, r) => a + r[k], 0);
   $('staffTotal').textContent = staffTotal();
-  $('telHT').innerHTML = `soit <b>${fmtE2(i.pTel)} HT</b> (dont ${fmtE2(i.pTelTTC - i.pTel)} de TVA)`;
   $('chHint').textContent = fleet.chargeurs ? '' : 'Aucun chargeur prévu : renseignez le nombre de chargeurs par établissement plus haut.';
   tween($('kFlotte'), fleet.tel, fmtN);
   tween($('kHT'), sum('total'), fmtE);
-  tween($('kTTC'), sum('totalTTC'), fmtE);
+  tween($('kAn'), sum('total') / i.horizon, fmtE);
   $('kHTl').textContent = `coût total HT sur ${i.horizon} ans`;
-  $('kTTCl').textContent = `coût total TTC sur ${i.horizon} ans`;
 
   // Mise à jour en place (et non recréation) pour que les barres glissent vers leur nouvelle hauteur.
   const cfg = chartConfig(i, rows, false);
@@ -377,9 +370,9 @@ function render() {
   }
 
   $('t').innerHTML =
-    '<thead><tr><th>Année</th><th>Type</th><th>Téléphones</th><th>Bornes</th><th>Chargeurs</th><th>Coût HT</th><th>Coût TTC</th><th>Cumul TTC</th></tr></thead><tbody>' +
-    rows.map(r => `<tr class="${r.full ? 'full' : ''}"><td>${r.y}</td><td>${r.type}</td><td>${fmtN(r.tel)}</td><td>${fmtN(r.bornes)}</td><td>${fmtN(r.chargeurs)}</td><td>${fmtE(r.total)}</td><td>${fmtE(r.totalTTC)}</td><td>${fmtE(r.cumulTTC)}</td></tr>`).join('') +
-    `</tbody><tfoot><tr><td>Total</td><td></td><td>${fmtN(sum('tel'))}</td><td>${fmtN(sum('bornes'))}</td><td>${fmtN(sum('chargeurs'))}</td><td>${fmtE(sum('total'))}</td><td>${fmtE(sum('totalTTC'))}</td><td></td></tr></tfoot>`;
+    '<thead><tr><th>Année</th><th>Type</th><th>Téléphones</th><th>Bornes</th><th>Chargeurs</th><th>Coût HT</th><th>Cumul HT</th></tr></thead><tbody>' +
+    rows.map(r => `<tr class="${r.full ? 'full' : ''}"><td>${r.y}</td><td>${r.type}</td><td>${fmtN(r.tel)}</td><td>${fmtN(r.bornes)}</td><td>${fmtN(r.chargeurs)}</td><td>${fmtE(r.total)}</td><td>${fmtE(r.cumul)}</td></tr>`).join('') +
+    `</tbody><tfoot><tr><td>Total</td><td></td><td>${fmtN(sum('tel'))}</td><td>${fmtN(sum('bornes'))}</td><td>${fmtN(sum('chargeurs'))}</td><td>${fmtE(sum('total'))}</td><td></td></tr></tfoot>`;
 }
 
 document.querySelectorAll('form input').forEach(el => el.addEventListener('input', render));
@@ -428,13 +421,9 @@ $('export').addEventListener('click', async () => {
   editable(6, 'Chargeurs individuels par établissement (moyenne)', i.chargeurs, '0.0');
   editable(7, 'Renouvellement annuel (maintenance)', i.pct, '0%');
   editable(8, 'Renouvellement complet tous les (années)', i.cycle, '0');
-  editable(10, 'Prix unitaire téléphone (€ TTC)', i.pTelTTC, eur2);
+  editable(10, 'Prix unitaire téléphone (€ HT)', i.pTel, eur2);
   editable(11, 'Prix unitaire borne de charge (€ HT)', i.pBorne, eur2);
   editable(12, 'Prix unitaire chargeur individuel (€ HT)', i.pChargeur, eur2);
-  editable(13, 'TVA', i.tva, '0.0%');
-  h.getCell('A14').value = 'Prix unitaire téléphone (€ HT)';
-  h.getCell('B14').value = { formula: 'B10/(1+B13)', result: i.pTel }; h.getCell('B14').numFmt = eur2;
-  h.getCell('C14').value = 'calculé à partir du prix TTC'; h.getCell('C14').font = grey;
   h.getCell('A16').value = 'Flotte totale'; h.getCell('A16').font = { bold: true };
   [[17, 'Téléphones', 'ROUND(B3*B4,0)', fleet.tel], [18, 'Bornes de charge', 'ROUND(B3*B5,0)', fleet.bornes],
    [19, 'Chargeurs individuels', 'ROUND(B3*B6,0)', fleet.chargeurs]].forEach(([r, l, f, v]) => {
@@ -446,12 +435,12 @@ $('export').addEventListener('click', async () => {
   }
 
   const s = wb.addWorksheet('Simulation');
-  s.columns = [10, 24, 12, 12, 12, 17, 17, 17, 16, 16, 16, 16].map(width => ({ width }));
+  s.columns = [10, 24, 12, 12, 12, 17, 17, 17, 16, 16].map(width => ({ width }));
   s.getCell('A1').value = 'Simulation année par année'; s.getCell('A1').font = { bold: true, size: 14 };
-  const hdr = ['Année', 'Type', 'Téléphones', 'Bornes', 'Chargeurs', 'Coût téléphones HT', 'Coût bornes HT', 'Coût chargeurs HT', 'Total HT', 'Total TTC', 'Cumul HT', 'Cumul TTC'];
+  const hdr = ['Année', 'Type', 'Téléphones', 'Bornes', 'Chargeurs', 'Coût téléphones HT', 'Coût bornes HT', 'Coût chargeurs HT', 'Total HT', 'Cumul HT'];
   const hr = s.getRow(3);
   hdr.forEach((t, k) => { const c = hr.getCell(k + 1); c.value = t; c.fill = head; c.font = white; c.alignment = { horizontal: 'center', wrapText: true }; });
-  const first = 4, TVA = `(1+${H}$B$13)`;
+  const first = 4;
   rows.forEach((r, k) => {
     const n = first + k, isFull = `MOD(A${n}-1,${H}$B$8)=0`;
     const qty = col => ({ formula: `IF(${isFull},${H}$B$${col},ROUNDUP(${H}$B$${col}*${H}$B$7,0))` });
@@ -461,24 +450,22 @@ $('export').addEventListener('click', async () => {
     row.getCell(3).value = { ...qty(17), result: r.tel };
     row.getCell(4).value = { ...qty(18), result: r.bornes };
     row.getCell(5).value = { ...qty(19), result: r.chargeurs };
-    row.getCell(6).value = { formula: `C${n}*${H}$B$14`, result: r.cTel };
+    row.getCell(6).value = { formula: `C${n}*${H}$B$10`, result: r.cTel };
     row.getCell(7).value = { formula: `D${n}*${H}$B$11`, result: r.cBornes };
     row.getCell(8).value = { formula: `E${n}*${H}$B$12`, result: r.cChargeurs };
     row.getCell(9).value = { formula: `SUM(F${n}:H${n})`, result: r.total };
-    row.getCell(10).value = { formula: `I${n}*${TVA}`, result: r.totalTTC };
-    row.getCell(11).value = { formula: k === 0 ? `I${n}` : `K${n - 1}+I${n}`, result: r.cumul };
-    row.getCell(12).value = { formula: k === 0 ? `J${n}` : `L${n - 1}+J${n}`, result: r.cumulTTC };
+    row.getCell(10).value = { formula: k === 0 ? `I${n}` : `J${n - 1}+I${n}`, result: r.cumul };
     for (let c = 3; c <= 5; c++) row.getCell(c).numFmt = '#,##0';
-    for (let c = 6; c <= 12; c++) row.getCell(c).numFmt = eur;
+    for (let c = 6; c <= 10; c++) row.getCell(c).numFmt = eur;
   });
   const last = first + rows.length - 1, tr = s.getRow(last + 1);
   tr.getCell(1).value = 'Total';
   const sum = k => rows.reduce((a, r) => a + r[k], 0);
-  [['C', 3, 'tel'], ['D', 4, 'bornes'], ['E', 5, 'chargeurs'], ['F', 6, 'cTel'], ['G', 7, 'cBornes'], ['H', 8, 'cChargeurs'], ['I', 9, 'total'], ['J', 10, 'totalTTC']]
+  [['C', 3, 'tel'], ['D', 4, 'bornes'], ['E', 5, 'chargeurs'], ['F', 6, 'cTel'], ['G', 7, 'cBornes'], ['H', 8, 'cChargeurs'], ['I', 9, 'total']]
     .forEach(([L, c, k]) => { tr.getCell(c).value = { formula: `SUM(${L}${first}:${L}${last})`, result: sum(k) }; tr.getCell(c).numFmt = c >= 6 ? eur : '#,##0'; });
   tr.font = { bold: true };
-  for (let c = 1; c <= 12; c++) tr.getCell(c).border = { top: { style: 'medium' } };
-  s.addConditionalFormatting({ ref: `A${first}:L${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFF1E3' } }, font: { bold: true } } }] });
+  for (let c = 1; c <= 10; c++) tr.getCell(c).border = { top: { style: 'medium' } };
+  s.addConditionalFormatting({ ref: `A${first}:J${last}`, rules: [{ type: 'expression', formulae: [`MOD($A${first}-1,${H}$B$8)=0`], style: { fill: { type: 'pattern', pattern: 'solid', bgColor: { argb: 'FFFFF1E3' } }, font: { bold: true } } }] });
   s.views = [{ state: 'frozen', ySplit: 3 }];
   s.getCell(`A${last + 3}`).value = "Année 1 : achat de toute la flotte. Années suivantes : remplacement du % de maintenance (arrondi à l'unité supérieure). Renouvellement complet à chaque fin de cycle (lignes en orange).";
   s.getCell(`A${last + 3}`).font = grey;
