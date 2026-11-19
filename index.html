@@ -477,6 +477,7 @@ function simulate(i) {
     }
     r.cTel = r.tel.qty * price.tel; r.cBornes = r.bornes.qty * price.bornes; r.cChargeurs = r.chargeurs.qty * price.chargeurs;
     r.hw = r.cTel + r.cBornes + r.cChargeurs;
+    r.hwMaint = ['tel', 'bornes', 'chargeurs'].reduce((a, t) => a + r[t].maint * price[t], 0);
     r.formation = ms.reduce((a, x) => a + x.formation, 0);
     r.param = ms.reduce((a, x) => a + x.param, 0);
     r.setup = r.formation + r.param;
@@ -485,6 +486,20 @@ function simulate(i) {
     r.total = r.hw + r.sp; cumul += r.total; r.cumul = cumul;
     rows.push(r);
   }
+  // Matériel au mois près : nouveau matériel le mois de l'équipement, renouvellement complet le même mois
+  // tous les « cycle » ans, maintenance de l'année répartie sur ses 12 mois. Les sommes retombent sur l'annuel.
+  const kitCost = i.tel * i.pTel + i.bornes * i.pBorne + i.chargeurs * i.pChargeur;
+  const equippedAt = m => (m === 0 ? actifs[0] : actifs[m] - actifs[m - 1]);
+  const cycleMonths = 12 * i.cycle;
+  monthly.forEach(x => {
+    x.hwNew = x.nouveaux * kitCost;
+    x.hwMaint = rows[x.y - START].hwMaint / 12;
+    let renewed = 0;
+    for (let k = x.m - cycleMonths; k >= 0; k -= cycleMonths) renewed += equippedAt(k);
+    x.hwRen = renewed * kitCost;
+    x.hw = x.hwNew + x.hwMaint + x.hwRen;
+    x.total = x.abo + x.formation + x.param + x.hw;
+  });
   const done = actifs.findIndex(n => n >= i.cible);
   return { rows, monthly, doneMonth: done >= 0 ? done : null };
 }
@@ -701,6 +716,10 @@ $('export').addEventListener('click', async () => {
     { h: 'Prix / lit / mois', v: x => x.price, f: eur2, w: 12 },
     { h: 'Abonnement du mois', v: x => x.abo, f: eur, sum: true, w: 15 },
     { h: 'Mise en place du mois', v: x => x.formation + x.param, f: eur, sum: true, w: 15 },
+    { h: 'Nouveau matériel du mois', v: x => x.hwNew, f: eur, sum: true, w: 15 },
+    { h: 'Maintenance matériel du mois', v: x => x.hwMaint, f: eur, sum: true, w: 15 },
+    { h: 'Renouvellement complet du mois', v: x => x.hwRen, f: eur, sum: true, w: 16 },
+    { h: 'Total du mois', v: x => x.total, f: eur, sum: true, w: 15 },
   ], monthly, true);
   pm.views = [{ state: 'frozen', ySplit: 4 }];
 
