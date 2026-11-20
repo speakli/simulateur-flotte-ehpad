@@ -88,16 +88,9 @@
     transition: background .25s, color .25s, border-color .25s; }
   .seg button[aria-pressed="true"] { border-color: var(--sp-500); background: #fff; box-shadow: 0 0 0 4px rgba(0, 122, 255, .1); }
   .seg button[aria-pressed="true"] .num { background: var(--sp-500); border-color: var(--sp-500); color: #fff; }
-  .panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .45s var(--ease), opacity .3s; }
-  .panel.open { grid-template-rows: 1fr; opacity: 1; }
-  .panel > div { overflow: hidden; }
-  .explain { font-size: 12.5px; color: #4a5568; background: var(--sp-50); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
-  .staff { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .staff .field { margin-bottom: 0; }
-  .staff .lbl { font-size: 12px !important; }
-  .total-staff { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px;
-    padding: 10px 14px; border-radius: 12px; border: 1.5px dashed var(--line); font-size: 13px; color: #4a5568; }
-  .total-staff b { font-size: 20px; color: var(--sp-500); }
+  .fixedval { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; border-radius: 14px;
+    border: 1.5px dashed var(--line); background: #fff; font-size: 14px; color: var(--muted); }
+  .fixedval b { font-size: 17px; color: var(--sp-900); }
 
   .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
   @media (max-width: 560px) { .kpis { grid-template-columns: 1fr; } }
@@ -207,30 +200,18 @@
       </div></details>
       <details class="sec" open><summary><span class="stitle">2 · Plan de déploiement</span><span class="recap" id="recap2"></span></summary>
       <div class="secbody">
-      <div class="field" data-id="deja" data-label="Établissements déjà équipés fin 2026" data-sub="matériel et mise en place déjà faits" data-value="2"></div>
-      <div class="field" data-id="objJuin" data-label="Établissements équipés fin juin 2027" data-sub="déploiement progressif de janvier à juin" data-value="19"></div>
+      <div class="field"><span class="lbl">Établissements déjà équipés fin 2026<small>matériel et mise en place déjà faits · non modifiable</small></span><div class="fixedval">🔒 <b id="dejaVal">2</b> établissements</div></div>
+      <div class="field" data-id="objJuin" data-label="Établissements du pilote, équipés fin juin 2027" data-sub="le pilote : établissements équipés entre janvier et fin juin 2027 (total, y compris les 2 déjà équipés)" data-value="19"></div>
       <div class="field" data-id="rythme" data-label="Puis, nouveaux établissements par mois" data-sub="à partir de juillet 2027" data-value="15" data-unit="/ mois" data-min="1"></div>
-      <div class="field" data-id="horizon" data-label="Durée de la simulation" data-sub="à partir de janvier 2027 · au minimum le temps d'équiper tout le parc" data-value="2" data-unit="ans" data-min="1" data-max="30"></div>
       <div class="hint" id="planHint" style="margin:-10px 0 16px"></div>
 
       </div></details>
       <details class="sec"><summary><span class="stitle">3 · Matériel par établissement</span><span class="recap" id="recap3"></span></summary>
       <div class="secbody">
-      <div class="field">
-        <span class="lbl">Téléphones par établissement<small>Un téléphone par soignant présent.</small></span>
-        <div class="explain">Veuillez indiquer le <b>nombre maximum de soignants présents sur l'établissement en même temps</b> pour chaque profil.</div>
-          <div class="staff">
-            <div class="field" data-id="as" data-label="AS" data-sub="aides-soignants" data-value="12"></div>
-            <div class="field" data-id="ide" data-label="IDE" data-sub="infirmiers" data-value="3"></div>
-            <div class="field" data-id="para" data-label="Paramédicaux" data-sub="autres, internes" data-value="4"></div>
-            <div class="field" data-id="idec" data-label="IDEC" data-sub="infirmier coordinateur" data-value="1"></div>
-          </div>
-          <div class="total-staff"><span>= téléphones par établissement</span><b id="staffTotal">20</b></div>
-      </div>
+      <div class="field" data-id="tel" data-label="Téléphones par établissement" data-sub="nombre moyen, calculé selon la méthode proposée dans le document envoyé par mail" data-value="20" data-unit="tél."></div>
       <div class="field" data-id="bornes" data-label="Bornes de charge par établissement" data-sub="moyenne" data-value="2"></div>
       <div class="field" data-id="chargeurs" data-label="Chargeurs individuels par établissement" data-sub="moyenne" data-value="2"></div>
       <div class="field" data-id="pct" data-label="Renouvellement annuel (maintenance)" data-sub="part de la flotte remplacée chaque année" data-value="10" data-unit="%" data-max="100"></div>
-      <div class="field" data-id="cycle" data-label="Renouvellement complet tous les" data-sub="compté à partir de l'équipement de chaque établissement" data-value="5" data-unit="ans" data-min="1"></div>
 
       </div></details>
       <details class="sec"><summary><span class="stitle">4 · Prix du matériel</span><span class="recap" id="recap4"></span></summary>
@@ -281,7 +262,7 @@
           <summary>Voir le détail année par année</summary>
           <div class="tablewrap"><table id="t"></table></div>
         </details>
-        <p class="note">Matériel : chaque établissement est équipé le mois de son déploiement ; ensuite, le % de maintenance est remplacé chaque année (arrondi au-dessus) et toute sa flotte est renouvelée à chaque fin de cycle. Les établissements déjà équipés fin 2026 n'ont ni matériel ni mise en place à payer, seulement l'abonnement.</p>
+        <p class="note">Matériel : chaque établissement est équipé le mois de son déploiement ; ensuite, le % de maintenance est remplacé chaque année (arrondi au-dessus) la flotte de chaque établissement est maintenue à ce rythme. Les établissements déjà équipés fin 2026 n'ont ni matériel ni mise en place à payer, seulement l'abonnement.</p>
       </div>
     </section>
   </div>
@@ -363,8 +344,10 @@ document.querySelectorAll('.field[data-id]').forEach(f => {
 });
 
 const num = id => Math.max(0, parseFloat($(id).value) || 0);
-const STAFF = [['as', 'AS (aides-soignants)'], ['ide', 'IDE (infirmiers)'], ['para', 'Autres paramédicaux internes'], ['idec', 'IDEC']];
-const staffTotal = () => STAFF.reduce((a, [id]) => a + Math.round(num(id)), 0);
+// Établissements équipés pendant la phase actuelle, avant 2027 : fixe par définition.
+const DEJA = 2;
+// La simulation couvre le déploiement complet + 2 ans de projection.
+const PROJECTION_YEARS = 2;
 
 function selectIn(group, btn) {
   group.querySelectorAll('button').forEach(x => { x.setAttribute('aria-pressed', x === btn); x.setAttribute('aria-checked', x === btn); });
@@ -373,14 +356,10 @@ function selectIn(group, btn) {
 // Vue emeis France / emeis Groupe : chaque vue retient son propre nombre d'établissements à équiper.
 let view = 'france';
 const cibleByView = { france: VIEWS.france.etab, groupe: VIEWS.groupe.etab };
-// Durée par défaut : 2 ans pour la France, 10 ans pour le Groupe ; chaque vue retient ensuite la sienne.
-const horizonByView = { france: 2, groupe: 10 };
 $('segView').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.view === view) return;
   cibleByView[view] = Math.round(num('cible'));
-  horizonByView[view] = Math.round(num('horizon'));
   view = b.dataset.view; selectIn($('segView'), b);
-  $('horizon').value = horizonByView[view];
   const c = $('cible'); c.value = cibleByView[view]; c.dispatchEvent(new Event('input'));
 }));
 
@@ -406,29 +385,22 @@ function deployMonths(cible, deja, objJuin, rythme) {
   return 6 + Math.ceil((cible - Math.max(objJuin, deja)) / Math.max(1, rythme));
 }
 
-// La durée de la simulation ne peut pas être plus courte que le déploiement complet.
-function minHorizon() {
-  const cible = Math.max(1, Math.round(num('cible')));
-  return Math.max(1, Math.ceil(deployMonths(cible, Math.round(num('deja')), Math.round(num('objJuin')), Math.round(num('rythme'))) / 12));
-}
-function enforceHorizon() {
-  const h = $('horizon'), min = minHorizon();
-  h.min = min; h.max = Math.max(30, min);
-  if ((parseFloat(h.value) || 0) < min && document.activeElement !== h) { h.value = min; h.dispatchEvent(new Event('input')); }
-  return min;
+// Durée de la simulation = années nécessaires pour équiper tout le parc + 2 ans de projection.
+function horizonYears(cible, objJuin, rythme) {
+  return Math.max(1, Math.ceil(deployMonths(cible, DEJA, objJuin, rythme) / 12)) + PROJECTION_YEARS;
 }
 
 function inputs() {
   const v = VIEWS[view];
+  const cible = Math.max(1, Math.round(num('cible'))), objJuin = Math.round(num('objJuin')), rythme = Math.max(1, Math.round(num('rythme')));
   return {
+    horizon: horizonYears(cible, objJuin, rythme),
     view, viewLabel: v.label, parc: v.etab, litsApprox: v.litsApprox,
     cible: Math.max(1, Math.round(num('cible'))),
     litsMoy: num('litsMoy'),
-    deja: Math.round(num('deja')), objJuin: Math.round(num('objJuin')), rythme: Math.round(num('rythme')),
-    horizon: Math.max(minHorizon(), Math.round(num('horizon'))),
-    staff: STAFF.map(([id, label]) => ({ id, label, n: Math.round(num(id)) })),
-    tel: staffTotal(), bornes: num('bornes'), chargeurs: num('chargeurs'),
-    pct: num('pct') / 100, cycle: Math.max(1, Math.round(num('cycle'))),
+    deja: DEJA, objJuin: Math.round(num('objJuin')), rythme: Math.max(1, Math.round(num('rythme'))),
+    tel: num('tel'), bornes: num('bornes'), chargeurs: num('chargeurs'),
+    pct: num('pct') / 100,
     pTel: num('pTel'), pCoque: num('pCoque'), pBorne: num('pBorne'), pChargeur: num('pChargeur'),
     pFormation: SETUP.formation, pParam: SETUP.param,
   };
@@ -467,16 +439,14 @@ function simulate(i) {
   for (let k = 0; k < i.horizon; k++) {
     const y = START + k, ms = monthly.filter(x => x.y === y);
     cohort[y] = ms.reduce((a, x) => a + x.nouveaux, 0);
-    let renew = 0, maintBase = 0;
-    for (let c = START - 1; c < y; c++) {
-      if ((y - c) % i.cycle === 0) renew += cohort[c]; else maintBase += cohort[c];
-    }
+    let maintBase = 0;
+    for (let c = START - 1; c < y; c++) maintBase += cohort[c];
     const r = { y, nouveaux: cohort[y], actifsFin: ms[ms.length - 1].actifs, litsFin: ms[ms.length - 1].lits,
       tier: ms[0].tier, price: ms[0].price };
     for (const t of HW_TYPES) {
-      const inst = Math.round(cohort[y] * kit[t]), ren = Math.round(renew * kit[t]);
+      const inst = Math.round(cohort[y] * kit[t]);
       const maint = Math.ceil(Math.round(maintBase * kit[t]) * i.pct - 1e-9);
-      r[t] = { inst, ren, maint, qty: inst + ren + maint };
+      r[t] = { inst, maint, qty: inst + maint };
     }
     r.cTel = r.tel.qty * price.tel; r.cCoques = r.coques.qty * price.coques; r.cTelCoques = r.cTel + r.cCoques;
     r.cBornes = r.bornes.qty * price.bornes; r.cChargeurs = r.chargeurs.qty * price.chargeurs;
@@ -490,18 +460,13 @@ function simulate(i) {
     r.total = r.hw + r.sp; cumul += r.total; r.cumul = cumul;
     rows.push(r);
   }
-  // Matériel au mois près : nouveau matériel le mois de l'équipement, renouvellement complet le même mois
-  // tous les « cycle » ans, maintenance de l'année répartie sur ses 12 mois. Les sommes retombent sur l'annuel.
+  // Matériel au mois près : nouveau matériel le mois de l'équipement, maintenance de l'année répartie
+  // sur ses 12 mois. Les sommes retombent sur l'annuel.
   const kitCost = HW_TYPES.reduce((a, t) => a + kit[t] * price[t], 0);
-  const equippedAt = m => (m === 0 ? actifs[0] : actifs[m] - actifs[m - 1]);
-  const cycleMonths = 12 * i.cycle;
   monthly.forEach(x => {
     x.hwNew = x.nouveaux * kitCost;
     x.hwMaint = rows[x.y - START].hwMaint / 12;
-    let renewed = 0;
-    for (let k = x.m - cycleMonths; k >= 0; k -= cycleMonths) renewed += equippedAt(k);
-    x.hwRen = renewed * kitCost;
-    x.hw = x.hwNew + x.hwMaint + x.hwRen;
+    x.hw = x.hwNew + x.hwMaint;
     x.total = x.abo + x.formation + x.param + x.hw;
   });
   const done = actifs.findIndex(n => n >= i.cible);
@@ -554,15 +519,13 @@ function drawChart(id, series, rows) {
 }
 
 function render() {
-  const minH = enforceHorizon();
   const i = inputs(), { rows, doneMonth } = simulate(i);
   const sum = k => rows.reduce((a, r) => a + r[k], 0);
   const last = rows[rows.length - 1];
 
-  $('staffTotal').textContent = staffTotal();
   const litsParc = i.cible * i.litsMoy;
   $('litsHint').innerHTML = `= <b>${fmtN(litsParc)} lits</b> une fois ces établissements équipés (pour repère, ${i.viewLabel} : environ ${fmtN(i.litsApprox)} lits)`;
-  const minNote = ` Durée minimale de la simulation : <b>${minH} an${minH > 1 ? 's' : ''}</b>.`;
+  const minNote = ` Simulation sur <b>${i.horizon} ans</b> : déploiement complet + ${PROJECTION_YEARS} ans de projection.`;
   $('planHint').innerHTML = (doneMonth !== null
     ? `Les ${fmtN(i.cible)} établissements sont équipés en <b>${fmtMonth(doneMonth)}</b>.`
     : `À ce rythme, <b>${fmtN(last.actifsFin)} établissements sur ${fmtN(i.cible)}</b> sont équipés fin ${last.y}.`) + minNote;
@@ -576,8 +539,8 @@ function render() {
 
   const recap = {
     recap1: `${i.viewLabel} · ${fmtN(i.cible)} établissements · ${fmtN(i.litsMoy)} lits / établ.`,
-    recap2: `${i.deja} → ${i.objJuin} fin juin 2027, puis ${i.rythme} / mois · ${i.horizon} ans`,
-    recap3: `${fmtN(i.tel)} tél. · ${fmtN(i.bornes)} bornes · ${fmtN(i.chargeurs)} chargeurs · ${Math.round(i.pct * 100)} % / an · complet tous les ${i.cycle} ans`,
+    recap2: `${i.deja} équipés → ${i.objJuin} en pilote fin juin 2027, puis ${i.rythme} / mois · ${i.horizon} ans`,
+    recap3: `${fmtN(i.tel)} tél. · ${fmtN(i.bornes)} bornes · ${fmtN(i.chargeurs)} chargeurs · maintenance ${Math.round(i.pct * 100)} % / an`,
     recap4: `Téléphone ${fmtE2(i.pTel)} · coque ${fmtE2(i.pCoque)} · borne ${fmtE2(i.pBorne)} · chargeur ${fmtE2(i.pChargeur)}`,
     recap5: `Mise en place ${fmtE(i.pFormation + i.pParam)} / établ. · abonnement de ${fmtE2(TIERS[3].price)} à ${fmtE2(TIERS[0].price)} / lit / mois`,
   };
@@ -608,7 +571,6 @@ function render() {
 }
 
 document.querySelectorAll('form input').forEach(el => el.addEventListener('input', render));
-$('horizon').addEventListener('blur', render);
 // Laisse les blocs apparaître avant que les chiffres et les barres ne montent.
 setTimeout(render, reduceMotion ? 0 : 650);
 
@@ -685,13 +647,12 @@ $('export').addEventListener('click', async () => {
 
   // 2. Matériel
   const h = wb.addWorksheet('Matériel');
-  titleCell(h, 'Investissement matériel', 'Quantités achetées chaque année : nouveaux établissements + maintenance + renouvellements complets');
+  titleCell(h, 'Investissement matériel', 'Quantités achetées chaque année : nouveaux établissements + maintenance');
   table(h, 4, [
     { h: 'Année', v: r => r.y, w: 9 },
     { h: 'Nouveaux établissements', v: r => r.nouveaux, f: int, sum: true, w: 14 },
     { h: 'Téléphones (nouveaux étab.)', v: r => r.tel.inst, f: int, sum: true, w: 14 },
     { h: 'Téléphones (maintenance)', v: r => r.tel.maint, f: int, sum: true, w: 14 },
-    { h: 'Téléphones (renouvellement)', v: r => r.tel.ren, f: int, sum: true, w: 15 },
     { h: 'Coques achetées', v: r => r.coques.qty, f: int, sum: true, w: 12 },
     { h: 'Bornes achetées', v: r => r.bornes.qty, f: int, sum: true, w: 12 },
     { h: 'Chargeurs achetés', v: r => r.chargeurs.qty, f: int, sum: true, w: 12 },
@@ -732,7 +693,6 @@ $('export').addEventListener('click', async () => {
     { h: 'Mise en place du mois', v: x => x.formation + x.param, f: eur, sum: true, w: 15 },
     { h: 'Nouveau matériel du mois', v: x => x.hwNew, f: eur, sum: true, w: 15 },
     { h: 'Maintenance matériel du mois', v: x => x.hwMaint, f: eur, sum: true, w: 15 },
-    { h: 'Renouvellement complet du mois', v: x => x.hwRen, f: eur, sum: true, w: 16 },
     { h: 'Total du mois', v: x => x.total, f: eur, sum: true, w: 15 },
   ], monthly, true);
   pm.views = [{ state: 'frozen', ySplit: 4 }];
@@ -743,12 +703,11 @@ $('export').addEventListener('click', async () => {
   titleCell(hy, 'Hypothèses de la simulation', 'Chiffres calculés par le simulateur en ligne : pour tester d\'autres hypothèses, utilisez le simulateur.');
   const H = [
     ['Périmètre', i.viewLabel], ['Établissements à équiper', i.cible], ['Lits par établissement (moyenne)', i.litsMoy],
-    ['Lits du parc, pour repère', `environ ${fmtN(i.litsApprox)}`], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements équipés fin juin 2027', i.objJuin],
-    ['Nouveaux établissements par mois à partir de juillet 2027', i.rythme], ['Durée de la simulation (années)', i.horizon],
-    ['Téléphones par établissement (= soignants présents en même temps, au maximum)', i.tel],
-    ...i.staff.map(st => [`   dont ${st.label}`, st.n]),
+    ['Lits du parc, pour repère', `environ ${fmtN(i.litsApprox)}`], ['Établissements déjà équipés fin 2026', i.deja], ['Établissements du pilote, équipés fin juin 2027', i.objJuin],
+    ['Nouveaux établissements par mois à partir de juillet 2027', i.rythme], ['Durée de la simulation (années) = déploiement complet + 2 ans', i.horizon],
+    ['Téléphones par établissement (moyenne)', i.tel],
     ['Bornes de charge par établissement', i.bornes], ['Chargeurs individuels par établissement', i.chargeurs],
-    ['Renouvellement annuel (maintenance)', `${Math.round(i.pct * 100)} %`], ['Renouvellement complet tous les (années)', i.cycle],
+    ['Renouvellement annuel (maintenance)', `${Math.round(i.pct * 100)} %`],
     ['Prix téléphone (€ HT)', i.pTel], ['Prix coque de téléphone (€ HT, une par téléphone)', i.pCoque], ['Prix borne de charge (€ HT)', i.pBorne], ['Prix chargeur individuel (€ HT)', i.pChargeur],
     ['Formation par nouvel établissement (€ HT)', i.pFormation], ['Paramétrage par nouvel établissement (€ HT)', i.pParam],
     ...TIERS.map((t, k) => [`Abonnement palier ${k + 1} (${t.label}), € HT / lit / mois`, t.price]),
